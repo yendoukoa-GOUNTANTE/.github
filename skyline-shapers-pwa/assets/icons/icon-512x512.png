@@ -1,0 +1,114 @@
+정사각형tool_code
+create_file_with_block
+skyline-shapers-pwa/service-worker.js
+// Skyline Shapers PWA - Basic Service Worker
+
+const CACHE_NAME = 'skyline-shapers-cache-v1';
+const urlsToCache = [
+  '/', // Alias for index.html
+  '/index.html',
+  '/manifest.json',
+  // Main game script(s) - actual names might vary if using a bundler
+  '/main.js',
+  // Key scene files (if loaded separately and not bundled into main.js)
+  '/scenes/PreloaderScene.js',
+  '/scenes/LevelSelectScene.js',
+  '/scenes/GameScene.js',
+  '/scenes/UIScene.js',
+  '/scenes/LevelCompleteScene.js',
+  // Phaser library (if self-hosted, CDN version won't be cacheable by SW this way)
+  // '/libs/phaser.min.js', // Example if self-hosting Phaser
+  // Core PWA Icons
+  '/assets/icons/icon-192x192.png',
+  '/assets/icons/icon-512x512.png',
+  // Critical game assets (a few examples - more would be added)
+  '/assets/images/background.png', // Main game background
+  '/assets/images/block_standard_1x1.png',
+  // '/assets/audio/music_menu.mp3', // If menu music is critical for offline feel
+  // '/data/levels.json' // If levels data is fetched and should be offline
+];
+
+// Install event: Cache core assets (App Shell)
+self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Skyline Shapers: Install');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[ServiceWorker] Caching core assets for Skyline Shapers');
+        const requests = urlsToCache.map(url => new Request(url, { cache: 'reload' }));
+        return cache.addAll(requests);
+      })
+      .then(() => {
+        console.log('[ServiceWorker] Core assets cached, skipping waiting.');
+        return self.skipWaiting(); // Activate worker immediately
+      })
+      .catch(error => {
+        console.error('[ServiceWorker] Caching failed during install:', error);
+      })
+  );
+});
+
+// Activate event: Clean up old caches
+self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Skyline Shapers: Activate');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName.startsWith('skyline-shapers-cache-') && cacheName !== CACHE_NAME) {
+            console.log('[ServiceWorker] Removing old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      console.log('[ServiceWorker] Old caches removed, claiming clients.');
+      return self.clients.claim();
+    })
+  );
+});
+
+// Fetch event: Serve cached content when offline (Cache First for app shell, then network)
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') {
+    return; // Only handle GET requests
+  }
+
+  // For navigation requests (e.g. loading index.html or a deep link if app had routes)
+  // Try network first to get the freshest content, fallback to cache.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          return caches.match(event.request) // Try to get it from cache if network fails
+            .then(cachedResponse => {
+              return cachedResponse; // || caches.match('/offline.html'); // Optional general offline page
+            });
+        })
+    );
+    return;
+  }
+
+  // For other assets (JS, CSS, images, data files), use Cache First strategy.
+  event.respondWith(
+    caches.match(event.request)
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse; // Serve from cache
+        }
+        // If not in cache, fetch from network
+        return fetch(event.request).then(networkResponse => {
+          // Optionally, dynamically cache new non-critical assets here if needed.
+          // For MVP, pre-caching specific assets is usually sufficient.
+          // Example:
+          // if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+          //   const responseToCache = networkResponse.clone();
+          //   caches.open(CACHE_NAME).then(cache => {
+          //     cache.put(event.request, responseToCache);
+          //   });
+          // }
+          return networkResponse;
+        });
+      })
+  );
+});
