@@ -1,0 +1,90 @@
+정사각형tool_code
+create_file_with_block
+web-codex/public/service-worker.js
+// Basic placeholder service worker
+
+const CACHE_NAME = 'sl-codex-cache-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  // Add other important assets here like main JS/CSS bundles once known
+  // '/assets/main.js',
+  // '/assets/main.css',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
+];
+
+// Install event: Cache core assets
+self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Install');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[ServiceWorker] Caching app shell');
+        return cache.addAll(urlsToCache);
+      })
+      .then(() => {
+        return self.skipWaiting(); // Activate worker immediately
+      })
+  );
+});
+
+// Activate event: Clean up old caches
+self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[ServiceWorker] Removing old cache', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      return self.clients.claim(); // Take control of all open clients
+    })
+  );
+});
+
+// Fetch event: Serve cached content when offline, or fetch from network
+self.addEventListener('fetch', event => {
+  console.log('[ServiceWorker] Fetch', event.request.url);
+  // For API requests or non-GET requests, always fetch from network
+  if (event.request.method !== 'GET' /* || event.request.url.includes('/api/') */) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          console.log('[ServiceWorker] Returning from cache:', event.request.url);
+          return response; // Serve from cache
+        }
+        console.log('[ServiceWorker] Fetching from network:', event.request.url);
+        return fetch(event.request).then(
+          networkResponse => {
+            // Optionally, cache newly fetched resources dynamically
+            // Be careful with what you cache here to avoid filling up storage
+            // if (networkResponse && networkResponse.status === 200 && !event.request.url.includes('sockjs-node')) { // Example: don't cache HMR updates
+            //   const responseToCache = networkResponse.clone();
+            //   caches.open(CACHE_NAME)
+            //     .then(cache => {
+            //       cache.put(event.request, responseToCache);
+            //     });
+            // }
+            return networkResponse;
+          }
+        );
+      })
+      .catch(error => {
+        console.error('[ServiceWorker] Fetch error:', error);
+        // Optionally, return a fallback offline page if appropriate
+        // return caches.match('/offline.html');
+      })
+  );
+});
