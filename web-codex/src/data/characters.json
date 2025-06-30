@@ -1,0 +1,112 @@
+[
+  {
+    "id": "sung-jinwoo",
+    "name": "Sung Jinwoo",
+    "alias": ["Shadow Monarch", "World's Weakest Hunter"],
+    "imageUrl": "/images/sung-jinwoo.png",
+    "description": "Once known as the E-Rank Hunter, Sung Jinwoo was chosen by the System to become a Player, eventually inheriting the full powers of the Shadow Monarch Ashborn.",
+    "type": "Hunter",
+    "rank": "Monarch",
+    "abilities": [
+      "Shadow Extraction",
+      "Shadow Exchange",
+      "Monarch's Domain",
+      "Immense Speed",
+      "Immense Strength",
+      "Ruler's Authority (partial)"
+    ],
+    "skills": [
+      "Stealth",
+      "Bloodlust",
+      "Quicksilver",
+      "Dagger Rush",
+      "Tempest",
+      "Shadow Army Manipulation"
+    ],
+    "stats": {
+      "strength": "Extremely High (Monarch Level)",
+      "agility": "Extremely High (Monarch Level)",
+      "vitality": "Extremely High (Monarch Level)",
+      "intelligence": "Extremely High (Monarch Level)",
+      "perception": "Extremely High (Monarch Level)",
+      "mana": "Vast (Monarch Level)"
+    },
+    "notes": "The second Shadow Monarch and the strongest Hunter.",
+    "firstAppearance": "Chapter 1 (Manhwa)",
+    "status": "Alive"
+  },
+  {
+    "id": "cha-hae-in",
+    "name": "Cha Hae-In",
+    "alias": ["The Dancer"],
+    "imageUrl": "/images/cha-hae-in.png",
+    "description": "South Korea's only female S-Rank Hunter and the Vice-Guild Master of the Hunters Guild. She has a unique ability to smell mana.",
+    "type": "Hunter",
+    "rank": "S-Rank",
+    "abilities": ["Mana Smell", "Exceptional Swordsmanship", "Enhanced Speed"],
+    "skills": ["Sword Dance", "Blade of Light"],
+    "stats": {
+      "strength": "S-Rank",
+      "agility": "S-Rank",
+      "vitality": "S-Rank",
+      "intelligence": "A-Rank",
+      "perception": "S-Rank (especially mana sense)"
+    },
+    "notes": "Later becomes Sung Jinwoo's wife.",
+    "firstAppearance": "Chapter 65 (Manhwa)",
+    "status": "Alive"
+  },
+  {
+    "id": "igris",
+    "name": "Igris",
+    "alias": ["Blood-Red Commander Igris"],
+    "imageUrl": "/images/igris.png",
+    "description": "A powerful knightly figure encountered by Sung Jinwoo in an S-Rank instant dungeon. After being defeated, he becomes one of Jinwoo's most loyal and formidable shadow soldiers.",
+    "type": "Shadow",
+    "rank": "Commander Grade (initially S-Rank equivalent)",
+    "abilities": ["Exceptional Swordsmanship", "Immense Strength", "Telekinesis (limited to his sword)"],
+    "skills": ["Lightning Sword"],
+    "stats": {
+      "strength": "Very High",
+      "loyalty": "Absolute"
+    },
+    "notes": "One of the first humanoid shadows Jinwoo extracts that can speak.",
+    "firstAppearance": "Chapter 40 (Manhwa - as enemy), Chapter 45 (Manhwa - as shadow)",
+    "status": "Undead"
+  },
+  {
+    "id": "beru",
+    "name": "Beru",
+    "alias": ["Ant King"],
+    "imageUrl": "/images/beru.png",
+    "description": "The monstrously powerful Ant King from the Jeju Island S-Rank Gate. After his defeat by Sung Jinwoo, Beru is extracted as a shadow and becomes an incredibly strong and fiercely loyal commander in the shadow army.",
+    "type": "Shadow",
+    "rank": "Marshal Grade (initially National Level Hunter equivalent)",
+    "abilities": ["Extreme Speed", "Immense Strength", "Flight", "Healing Magic", "Devour"],
+    "skills": ["Ant Swarm", "Regeneration"],
+    "stats": {
+      "strength": "Overwhelming",
+      "speed": "Blinding",
+      "intelligence": "High (learns quickly)"
+    },
+    "notes": "Obsessively loyal to Sung Jinwoo and enjoys reading.",
+    "firstAppearance": "Chapter 90 (Manhwa - as enemy), Chapter 107 (Manhwa - as shadow)",
+    "status": "Undead"
+  },
+  {
+    "id": "kamish",
+    "name": "Kamish",
+    "alias": ["Worst Disaster in Human History", "Dragon Monarch's Fang"],
+    "imageUrl": "/images/kamish.png",
+    "description": "An S-Rank magic beast (dragon) that emerged from the first S-Rank Gate in the USA. It took multiple National Level Hunters to bring him down. Sung Jinwoo later attempted to extract his shadow.",
+    "type": "Monster",
+    "rank": "S-Rank (Cataclysmic)",
+    "abilities": ["Dragon Fear (Aura)", "Dragon's Breath (Fire)", "Immense Durability", "Flight"],
+    "stats": {
+      "power": "Overwhelming"
+    },
+    "notes": "Shadow extraction by Jinwoo failed due to too much time having passed since its death.",
+    "firstAppearance": "Mentioned early, seen in flashback/records (e.g. Chapter 133 Manhwa)",
+    "status": "Deceased"
+  }
+]
