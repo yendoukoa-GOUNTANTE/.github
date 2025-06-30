@@ -1,0 +1,38 @@
+{
+  "instant_games": {
+    "platform_version": "RICH_GAMEPLAY",
+    "orientation": "PORTRAIT",
+    "navigation_menu_version": "NAV_BAR",
+    "custom_update_templates": {
+      "new_high_score": {
+        "example": "Player just set a new high score in Penalty Kick Champions!"
+      },
+      "tournament_win": {
+        "example": "Player just won the Fictional European Championship in Penalty Kick Champions!"
+      }
+    },
+    "surfaceable_stats": {
+      "tournament_wins": {
+        "priority": 1,
+        "order": 1,
+        "label": {
+          "localizations": {
+            "en_US": "Tournaments Won"
+          },
+          "fallback": "Tournaments Won"
+        }
+      },
+      "best_shootout_score": {
+        "priority": 2,
+        "order": 2,
+        "label": {
+          "localizations": {
+            "en_US": "Best Shootout"
+          },
+          "fallback": "Best Shootout"
+        }
+      }
+    },
+    "sdk_version": "8.0" // Or latest applicable version we target
+  }
+}
