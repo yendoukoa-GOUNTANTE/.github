@@ -1,0 +1,108 @@
+정사각형tool_code
+create_file_with_block
+glamfilter-pwa/public/service-worker.js
+// GlamFilter AR Companion PWA - Basic Service Worker
+
+const CACHE_NAME = 'glamfilter-companion-cache-v1';
+const urlsToCache = [
+  '/', // Home page (Showcase)
+  '/index.html', // Main HTML entry point
+  '/manifest.json', // PWA Manifest
+  // Placeholder for main JS and CSS bundles (actual names will be hashed by Vite)
+  // '/assets/index.js',
+  // '/assets/index.css',
+  // Icons (as defined in manifest.json)
+  '/icons/app-icon-192x192.png',
+  '/icons/app-icon-512x512.png',
+  // Key static assets for core features (add more as identified)
+  // e.g., '/images/app-store-badge.png', '/images/google-play-badge.png'
+  // e.g., '/data/makeup-items.json' (if fetched client-side and cacheable)
+  // e.g., '/tips/' (if tips list page is important offline)
+];
+
+// Install event: Cache core assets (App Shell)
+self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Install');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[ServiceWorker] Caching core assets for GlamFilter Companion');
+        // Use 'reload' cache mode to bypass HTTP cache for these critical files during install
+        const requests = urlsToCache.map(url => new Request(url, { cache: 'reload' }));
+        return cache.addAll(requests);
+      })
+      .then(() => {
+        console.log('[ServiceWorker] Core assets cached, skipping waiting.');
+        return self.skipWaiting(); // Activate worker immediately
+      })
+      .catch(error => {
+        console.error('[ServiceWorker] Caching failed during install:', error);
+      })
+  );
+});
+
+// Activate event: Clean up old caches
+self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[ServiceWorker] Removing old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      console.log('[ServiceWorker] Old caches removed, claiming clients.');
+      return self.clients.claim(); // Take control of all open clients
+    })
+  );
+});
+
+// Fetch event: Serve cached content when offline (Cache First for app shell, then network)
+self.addEventListener('fetch', event => {
+  // We only want to handle GET requests for caching
+  if (event.request.method !== 'GET') {
+    // console.log('[ServiceWorker] Ignoring non-GET request:', event.request.method, event.request.url);
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          // console.log('[ServiceWorker] Returning from cache:', event.request.url);
+          return cachedResponse; // Serve from cache
+        }
+
+        // console.log('[ServiceWorker] Fetching from network:', event.request.url);
+        return fetch(event.request).then(networkResponse => {
+          // Optional: Dynamically cache other successful GET requests if needed.
+          // Be cautious with this to avoid caching too much or outdated API data.
+          // For a content PWA, caching article pages or images upon first visit might be good.
+          // Example:
+          // if (networkResponse && networkResponse.status === 200 &&
+          //     (event.request.url.startsWith(self.location.origin) && !event.request.url.includes('sockjs-node')) // Only cache same-origin, ignore HMR
+          // ) {
+          //   const responseToCache = networkResponse.clone();
+          //   caches.open(CACHE_NAME)
+          //     .then(cache => {
+          //       console.log('[ServiceWorker] Caching new resource:', event.request.url);
+          //       cache.put(event.request, responseToCache);
+          //     });
+          // }
+          return networkResponse;
+        });
+      })
+      .catch(error => {
+        console.error('[ServiceWorker] Fetch error:', error);
+        // Optionally, return a fallback offline page if appropriate and cached:
+        // For example, if it's a navigation to a page not in cache:
+        // if (event.request.mode === 'navigate') {
+        //   return caches.match('/offline.html'); // Assuming you have an offline.html cached
+        // }
+      })
+  );
+});
