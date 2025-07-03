@@ -219,5 +219,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial State ---
     updateEventLog("Page loaded. Click 'Start New Game' to begin.");
     enableActionButtons(false); // Disable action buttons until game starts
+
+    // --- PWA Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js') // Path relative to origin
+                .then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    updateEventLog('Service Worker registered successfully.');
+                })
+                .catch((error) => {
+                    console.error('ServiceWorker registration failed: ', error);
+                    updateEventLog(`Service Worker registration failed: ${error.message}`);
+                });
+        });
+    } else {
+        console.warn('Service workers are not supported in this browser.');
+        updateEventLog('Service Workers not supported by this browser.');
+    }
 });
 ```
