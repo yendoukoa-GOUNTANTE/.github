@@ -1,35 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using @vitejs/plugin-react"
-    />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="/manifest.json" />
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Boxing Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>AR Boxing Game</h1>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+        <div class="match-info">
+            <p>Round: <span id="round-number">0</span> / <span id="max-rounds">3</span></p>
+            <p>Time: <span id="round-timer">90</span>s</p>
+            <p>Status: <span id="match-status">PENDING</span></p>
+            <p>Winner: <span id="match-winner">N/A</span></p>
+        </div>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
-  <script type="module" src="/src/index.jsx"></script>
+        <div class="fighters-container">
+            <div class="fighter-panel" id="player-panel">
+                <h2>Player (<span id="player-name">Player</span>)</h2>
+                <p>HP: <progress id="player-hp-bar" value="100" max="100"></progress> <span id="player-hp-text">100/100</span></p>
+                <p>Stamina: <progress id="player-stamina-bar" value="100" max="100"></progress> <span id="player-stamina-text">100/100</span></p>
+                <p>Action: <span id="player-current-action">IDLE</span></p>
+                <p>Scores: <span id="player-round-scores"></span></p>
+            </div>
+
+            <div class="fighter-panel" id="opponent-panel">
+                <h2>Opponent (<span id="opponent-name">Opponent</span>)</h2>
+                <p>HP: <progress id="opponent-hp-bar" value="100" max="100"></progress> <span id="opponent-hp-text">100/100</span></p>
+                <p>Stamina: <progress id="opponent-stamina-bar" value="100" max="100"></progress> <span id="opponent-stamina-text">100/100</span></p>
+                <p>Action: <span id="opponent-current-action">IDLE</span></p>
+                <p>Scores: <span id="opponent-round-scores"></span></p>
+            </div>
+        </div>
+
+        <div class="knockdown-info-panel">
+            <h3>Knockdown Status</h3>
+            <p>Active: <span id="knockdown-active">No</span></p>
+            <p>Fighter Down: <span id="knockdown-fighter">N/A</span></p>
+            <p>Count: <span id="knockdown-count">0</span>s</p>
+        </div>
+
+        <div class="actions-panel">
+            <h3>Player Actions</h3>
+            <button class="action-btn" data-action="JAB">Jab</button>
+            <button class="action-btn" data-action="CROSS">Cross</button>
+            <button class="action-btn" data-action="HOOK">Hook</button>
+            <button class="action-btn" data-action="UPPERCUT">Uppercut</button>
+            <button class="action-btn" data-action="BLOCK">Block</button>
+            <button class="action-btn" data-action="DODGE">Dodge</button>
+            <!-- Movement actions can be added later -->
+        </div>
+
+        <div class="controls-panel">
+            <button id="start-game-btn">Start New Game</button>
+            <button id="get-state-btn">Refresh Game State (Manual)</button>
+        </div>
+
+        <div class="event-log-panel">
+            <h3>Event Log (Last 10)</h3>
+            <ul id="event-log-list">
+                <li>Game events will appear here...</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
