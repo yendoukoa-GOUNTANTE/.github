@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'http://localhost:5001'; // Assuming Flask runs on port 5001
+    // IMPORTANT: This URL will need to be updated to your actual deployed API Gateway URL or Load Balancer URL
+    // when you deploy the backend to a cloud platform.
+    // For local testing with Flask running directly: 'http://localhost:5001'
+    // When running Flask inside Docker locally (if Docker maps port 8080 to host's 8080): 'http://localhost:8080'
+    // For a deployed app, it might be something like: 'https://your-api-id.execute-api.your-region.amazonaws.com/prod'
+    // or 'https://your-custom-domain.com/api'
+    const API_BASE_URL = "YOUR_DEPLOYED_API_URL_HERE"; // Placeholder
+    // const API_BASE_URL = 'http://localhost:5001'; // Example for local dev
+
     let currentGameId = null;
 
     // UI Elements - General Match Info

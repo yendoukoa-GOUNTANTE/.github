@@ -120,12 +120,37 @@ def get_game_state(game_id):
     return jsonify(serialize_game_state(game_state)), 200
 
 if __name__ == '__main__':
-    # It's good practice to enable logging for development
+    # The following app.run() is for local development only.
+    # When deploying to production using Gunicorn, Gunicorn will serve the 'app' object
+    # from this file (e.g., `gunicorn app:app`).
+    # Ensure Gunicorn is listed in your requirements.txt.
+
+    # Note on CORS (Cross-Origin Resource Sharing):
+    # If your static front-end assets (HTML, JS, CSS) are served from a different domain
+    # or port than this API in production, you'll need to configure CORS on the server.
+    # For example, using the Flask-CORS extension:
+    # from flask_cors import CORS
+    # CORS(app) # This allows all origins by default.
+    # For production, you should restrict it to specific origins:
+    # CORS(app, resources={r"/game/*": {"origins": "https://yourfrontenddomain.com"}})
+
+    # Note on 'active_games' persistence:
+    # The current 'active_games' dictionary is an in-memory store. This means all game
+    # states will be lost if the server restarts or if you scale to multiple instances
+    # (as each instance would have its own separate dictionary).
+    # For a production application, this should be replaced with a persistent and/or
+    # shared storage solution, such as:
+    # - A database (e.g., PostgreSQL, MySQL, MongoDB) for storing game states.
+    # - An in-memory data store like Redis (which can also be configured for persistence)
+    #   for fast access to active game sessions.
+
     import logging
-    logging.basicConfig(level=logging.INFO)
-    # Make sure PLAYER_ACTION_QUEUE is cleared if app is re-run in some interactive environments
-    bgl.PLAYER_ACTION_QUEUE.clear()
-    app.run(debug=True, port=5001) # Using port 5001 to avoid conflicts
+    # Configure logging for development. Gunicorn will handle logging in production.
+    if __name__ == '__main__':
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+        app.logger.info("Flask app starting in development mode via app.run()...")
+        bgl.PLAYER_ACTION_QUEUE.clear() # Clear any test queue items
+        app.run(host='0.0.0.0', port=5001, debug=True)
 ```
 
 **Self-correction/Notes for `app.py`:**
