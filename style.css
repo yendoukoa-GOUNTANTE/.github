@@ -179,4 +179,45 @@ progress[value]::-moz-progress-bar {
         font-size: 0.85em;
     }
 }
+
+/* Ad Placeholder Styles */
+#bottom-banner-ad-placeholder {
+    width: 100%;
+    max-width: 728px; /* Common banner ad width */
+    height: 90px;     /* Common banner ad height */
+    background-color: #e0e0e0;
+    border: 1px dashed #aaaaaa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 20px auto 0 auto; /* Centered, with margin top */
+    font-size: 0.9em;
+    color: #555;
+}
+#bottom-banner-ad-placeholder::before {
+    content: "Bottom Banner Ad Placeholder (e.g., 728x90)";
+}
+
+/* Optional: Styling for the conceptual interstitial placeholder if it were to be used */
+/*
+#interstitial-ad-placeholder {
+    display: none; // Hidden by default, shown by JS
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    z-index: 10000; // Ensure it's on top
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+}
+#interstitial-ad-placeholder::before {
+    content: "Interstitial Ad Placeholder";
+}
+*/
 ```
