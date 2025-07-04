@@ -766,6 +766,102 @@ if __name__ == '__main__':
     print(f"Player HP: {game.player.hp}, Stamina: {game.player.stamina}")
     print(f"Opponent HP: {game.opponent.hp}, Stamina: {game.opponent.stamina}")
 
+
+# --- Helper for Deserialization (New for DynamoDB integration) ---
+def create_fighter_from_dict(data: dict, name_enum: FighterName) -> Fighter:
+    """Creates a Fighter instance from a dictionary (e.g., from DynamoDB)."""
+    if not data:
+        return None
+
+    fighter = Fighter(name_enum) # Use the name_enum for correct FighterName
+    fighter.hp = data.get("hp", MAX_HP)
+    fighter.max_hp = data.get("max_hp", MAX_HP) # Should ideally be same as MAX_HP
+    fighter.stamina = data.get("stamina", MAX_STAMINA)
+    fighter.max_stamina = data.get("max_stamina", MAX_STAMINA) # Should be MAX_STAMINA
+    fighter.knockdowns_this_round = data.get("knockdowns_this_round", 0)
+    fighter.total_knockdowns = data.get("total_knockdowns", 0)
+
+    current_action_str = data.get("current_action", "IDLE")
+    try:
+        fighter.current_action = ActionType[current_action_str]
+    except KeyError:
+        fighter.current_action = ActionType.IDLE # Default if invalid string
+
+    fighter.action_start_time = data.get("action_start_time", 0) # May not be in older saves
+
+    # Stats deserialization: ensure enum keys are handled if they were stored as strings
+    raw_stats = data.get("stats", {})
+    fighter.stats = create_empty_fighter_stats() # Start with a clean slate
+    for k, v in raw_stats.items():
+        try:
+            action_key = ActionType[k] # If key is an ActionType string
+            fighter.stats[action_key] = v
+        except KeyError:
+            fighter.stats[k] = v # For non-ActionType keys like "punches_thrown"
+
+    fighter.round_scores = data.get("round_scores", [])
+    return fighter
+
+def create_gamestate_from_dict(data: dict) -> GameState:
+    """Creates a GameState instance from a dictionary (e.g., from DynamoDB)."""
+    if not data:
+        return None
+
+    game_state = GameState() # Creates player/opponent with defaults
+
+    game_state.game_id = data.get("game_id") # Assuming game_id is stored at top level
+
+    try:
+        game_state.match_status = GameStatus[data.get("match_status", "PENDING")]
+    except KeyError:
+        game_state.match_status = GameStatus.PENDING
+
+    game_state.current_round = data.get("current_round", 0)
+    game_state.max_rounds = data.get("max_rounds", MAX_ROUNDS) # Should be MAX_ROUNDS
+    game_state.round_timer = data.get("round_timer", ROUND_DURATION_SECONDS)
+    game_state.is_round_active = data.get("is_round_active", False)
+    game_state.between_rounds_timer = data.get("between_rounds_timer", 0)
+
+    winner_val = data.get("winner")
+    if winner_val:
+        if winner_val == "draw":
+            game_state.winner = "draw"
+        else:
+            try:
+                game_state.winner = FighterName[winner_val]
+            except KeyError:
+                game_state.winner = None # Or log an error
+    else:
+        game_state.winner = None
+
+    # Deserialize player and opponent
+    player_data = data.get("player")
+    if player_data:
+        game_state.player = create_fighter_from_dict(player_data, FighterName.PLAYER)
+
+    opponent_data = data.get("opponent")
+    if opponent_data:
+        game_state.opponent = create_fighter_from_dict(opponent_data, FighterName.OPPONENT)
+
+    # Deserialize knockdown_info
+    kd_info_data = data.get("knockdown_info", {})
+    game_state.knockdown_info["is_knockdown"] = kd_info_data.get("is_knockdown", False)
+    kd_fighter_str = kd_info_data.get("fighter_down")
+    if kd_fighter_str:
+        try:
+            game_state.knockdown_info["fighter_down"] = FighterName[kd_fighter_str]
+        except KeyError:
+            game_state.knockdown_info["fighter_down"] = None
+    else:
+        game_state.knockdown_info["fighter_down"] = None
+    game_state.knockdown_info["count"] = kd_info_data.get("count", 0)
+
+    game_state.event_log = data.get("event_log", []) # Assumes event log is stored as list of strings
+    game_state.last_tick_time = data.get("last_tick_time", time.time()) # Default to now if not present
+
+    return game_state
+
+
 # --- Placeholder Functions for API Interaction ---
 
 def handle_start_game_request():
