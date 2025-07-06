@@ -54,24 +54,64 @@ export const patternsLibrary: Pattern[] = [
 ];
 
 // Simple AI for pattern suggestion
+
+// New library for AI-exclusive suggestions when premium is active
+export const premiumAIPatternsLibrary: Pattern[] = [
+  {
+    id: 'ai-exclusive-aurora',
+    name: 'AI: Aurora Borealis',
+    style: 'gradient',
+    description: 'A flowing, multi-color gradient inspired by the northern lights.',
+    color1: '#3ddde0', // teal
+    color2: '#9c4ad0'  // purple
+  },
+  {
+    id: 'ai-exclusive-circuit',
+    name: 'AI: Cyber Circuit',
+    style: 'stripes', // Represented as complex stripes/lines
+    description: 'Glowing, intricate circuit board lines.',
+    color1: '#00ff00', // bright green
+    color2: '#005000'  // dark green
+  },
+];
+
+
 export class PatternAI {
-  private currentIndex = 0;
+  private suggestionCycleIndex = 0;
 
-  // Suggests the next pattern in a cycle
-  suggestPattern(): Pattern {
-    const pattern = patternsLibrary[this.currentIndex];
-    this.currentIndex = (this.currentIndex + 1) % patternsLibrary.length;
-    return pattern;
+  // Suggests a pattern, potentially from an expanded set if premium AI is active.
+  suggestPattern(
+    currentSelectedPattern: Pattern, // For context, not used in this basic version yet
+    availableToUserPatterns: Pattern[], // Patterns user owns or are free
+    hasPremiumAIAccess: boolean = false
+  ): Pattern {
+    let combinedPool = [...availableToUserPatterns];
+    if (hasPremiumAIAccess) {
+      combinedPool = [...combinedPool, ...premiumAIPatternsLibrary];
+    }
+
+    if (combinedPool.length === 0) { // Should not happen if patternsLibrary is not empty
+        return patternsLibrary[0] || {id:'fallback', name:'Fallback', style:'solid', color1:'grey', description:'Fallback pattern'};
+    }
+
+    // Simple cycling for PoC to ensure all types of suggestions are seen
+    this.suggestionCycleIndex = (this.suggestionCycleIndex + 1) % combinedPool.length;
+    const suggested = combinedPool[this.suggestionCycleIndex];
+
+    // Avoid suggesting the exact same pattern that is currently selected, if possible and pool is larger
+    if (combinedPool.length > 1 && suggested.id === currentSelectedPattern.id) {
+        this.suggestionCycleIndex = (this.suggestionCycleIndex + 1) % combinedPool.length;
+        return combinedPool[this.suggestionCycleIndex];
+    }
+    return suggested;
   }
 
-  // Suggests a random pattern
-  suggestRandomPattern(): Pattern {
-    const randomIndex = Math.floor(Math.random() * patternsLibrary.length);
-    return patternsLibrary[randomIndex];
-  }
-
-  // Get a specific pattern by ID (useful for user selection)
-  getPatternById(id: string): Pattern | undefined {
-    return patternsLibrary.find(p => p.id === id);
+  // Get a specific pattern by ID (useful for user selection from combined list)
+  getPatternById(id: string, availableToUserPatterns: Pattern[], hasPremiumAIAccess: boolean = false): Pattern | undefined {
+    let combinedPool = [...availableToUserPatterns];
+    if (hasPremiumAIAccess) {
+      combinedPool = [...combinedPool, ...premiumAIPatternsLibrary];
+    }
+    return combinedPool.find(p => p.id === id);
   }
 }
