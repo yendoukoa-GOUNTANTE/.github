@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AR Boxing Game Backend API
+
+Globals:
+  Function:
+    Timeout: 30 # Increased timeout for potential game logic, default is 3s
+    MemorySize: 256 # Increased memory, default is 128MB
+    Runtime: python3.9
+    Architectures:
+      - x86_64 # or arm64 if preferred and dependencies support it
+
+Parameters:
+  DynamoDBTableName:
+    Type: String
+    Default: ARBoxingGameStates
+    Description: Name of the DynamoDB table to store game states.
+
+Resources:
+  ARBoxingGameFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./ # Points to the directory containing app.py, boxing_game_logic.py, and requirements.txt
+      Handler: app.lambda_handler # The path to the lambda handler function in app.py
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
+          # PYTHONUNBUFFERED: "1" # Often useful for seeing logs immediately in CloudWatch
+      Policies:
+        # Policy to allow Lambda to read/write to the specified DynamoDB table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTableName
+      Events:
+        ApiEvents:
+          Type: HttpApi # Using HTTP API for lower cost and latency (vs REST API)
+          Properties:
+            # Path and method are not strictly needed here if using $default route
+            # but shown for clarity if you wanted more specific routes later.
+            # Path: /{proxy+}
+            # Method: ANY
+            # Using $default route to catch all requests to the API root.
+            # Your Flask routes (/game/start, /game/{game_id}/action, etc.) will be handled by the app.
+            TimeoutInMillis: 29000 # API Gateway timeout, should be less than Lambda timeout
+
+  # Optional: Define the DynamoDB table within the SAM template (Infrastructure as Code)
+  GameStatesDynamoDBTable:
+    Type: AWS::DynamoDB::Table # This is a CloudFormation resource type, not Serverless specific
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      AttributeDefinitions:
+        - AttributeName: game_id
+          AttributeType: S # String
+      KeySchema:
+        - AttributeName: game_id
+          KeyType: HASH # Partition key
+      BillingMode: PAY_PER_REQUEST # Good for unpredictable workloads, can also use PROVISIONED
+      # Optional: Enable Time To Live (TTL) for automatic cleanup of old game states
+      # TimeToLiveSpecification:
+      #   AttributeName: ttl # Name of the attribute that stores the expiration timestamp
+      #   Enabled: true
+
+Outputs:
+  ARBoxingApiEndpoint:
+    Description: "API Gateway endpoint URL for AR Boxing Game"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+  ARBoxingGameFunctionIamRole:
+    Description: "Implicit IAM Role created for AR Boxing Game function"
+    Value: !GetAtt ARBoxingGameFunctionRole.Arn
+
+```yaml
+# How to deploy using AWS SAM CLI:
+# 1. Install AWS SAM CLI: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+# 2. Configure AWS credentials.
+# 3. Build the application:
+#    sam build
+# 4. Deploy the application:
+#    sam deploy --guided
+#    (This will prompt for parameters like Stack Name, AWS Region, DynamoDBTableName (can use default), and confirmation to deploy changesets)
+#    It will also ask if the function needs permissions to be publicly accessible via API Gateway - say yes.
+# 5. After deployment, the API Gateway endpoint URL will be in the Outputs section.
+#
+# To test locally (simulates Lambda and API Gateway):
+# 1. Ensure Docker is running.
+# 2. Start the local API:
+#    sam local start-api --parameter-overrides DynamoDBTableName=YourLocalOrTestTableName
+#    (You might need to set up DynamoDB Local separately for local testing of persistence,
+#     or point to a dev table in AWS, ensuring your local AWS credentials are set up).
+#    The API will be available at http://localhost:3000 by default.
+```
