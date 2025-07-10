@@ -79,8 +79,8 @@ pwa-ai-blockchain/
 ### 3. Conceptual Backend Proxy
    - Located in the `backend/` directory.
    - A Node.js Express server designed to act as a proxy for real AI/Blockchain API calls (currently mocks responses).
-   - Includes a `Dockerfile` for containerization.
-   - See `backend/README.md` for more details on running this server.
+   - Includes a `Dockerfile` for containerization and a `Procfile` for Heroku deployment.
+   - See `backend/README.md` for more details on running this server locally (Node.js or Docker) and for detailed Heroku deployment instructions.
 
 ### 4. Deployment & Testing
    - `netlify.toml`: Configuration for deploying the static PWA to Netlify.
