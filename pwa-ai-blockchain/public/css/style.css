@@ -60,3 +60,22 @@ footer {
     bottom: 0;
     width: 100%;
 }
+
+/* Basic VR/Large Screen Readability Considerations */
+@media (min-width: 1000px) { /* Example breakpoint for large screens / VR panels */
+    body {
+        font-size: 1.1em; /* Slightly larger base font */
+    }
+    main {
+        max-width: 960px; /* Limit width for better readability on wide displays */
+        margin: 0 auto;   /* Center content */
+        padding: 2em;
+    }
+    button {
+        padding: 0.8em 1.8em;
+        font-size: 1.1em;
+    }
+    #ai-output, #blockchain-output {
+        font-size: 1.05em;
+    }
+}
