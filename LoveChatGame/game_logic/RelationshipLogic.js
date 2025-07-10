@@ -69,10 +69,35 @@ class RelationshipLogic {
                 if (relationship.score < this.milestones.friend_budding) scoreChange *= 2; // Bigger impact early on
                 break;
             case "received_gift":
-                const giftValue = npc.getGiftPreference(params.itemId) || 0;
-                scoreChange = giftValue;
-                if (giftValue > 0 && npc.personalityTraits.grateful) scoreChange += Math.floor(giftValue * 0.2); // Grateful NPCs appreciate more
-                if (giftValue < 0) scoreChange *= 2; // Really dislikes gift
+                const player = PlayerProfile.getPlayer(playerId); // Ensure player is defined
+                if (!player || !params.itemId) {
+                    console.error("Error in received_gift: Player or itemId missing.");
+                    return;
+                }
+                const giftedItem = player.inventory[params.itemId];
+                if (!giftedItem) {
+                    console.error(`Error in received_gift: Item ${params.itemId} not found in player inventory.`);
+                    return;
+                }
+
+                // Use the new getGiftPreferenceValue which takes the full item object
+                const giftPreferenceScore = npc.getGiftPreferenceValue({
+                    itemId: params.itemId,
+                    type: giftedItem.type,
+                    metadata: giftedItem.metadata
+                });
+                scoreChange = giftPreferenceScore;
+
+                // Add bonus based on NPC's core personality traits if they are grateful/appreciative
+                if (giftPreferenceScore > 0 && npc.corePersonality && npc.corePersonality.gratefulness) { // Assuming 'gratefulness' trait
+                    scoreChange += Math.floor(giftPreferenceScore * (npc.corePersonality.gratefulness / 10));
+                } else if (giftPreferenceScore > 0 && npc.hasDescriptivePersonalityTag("appreciative")) { // Fallback to descriptive tag
+                     scoreChange += Math.floor(giftPreferenceScore * 0.2);
+                }
+
+                if (giftPreferenceScore < 0) { // If NPC dislikes the gift type/style
+                    scoreChange -= 2; // Extra penalty for disliked gifts
+                }
                 break;
             case "completed_shared_activity":
                 scoreChange = params.activityValue || 5; // Default 5 points for an activity

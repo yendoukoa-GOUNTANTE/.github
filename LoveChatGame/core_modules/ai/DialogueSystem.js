@@ -96,10 +96,18 @@ class DialogueSystem {
                 personalityFlavor = " Trying to buy my affection, are we? Let's see it then.";
             } else if (npc.hasDescriptivePersonalityTag("sarcastic")){
                 personalityFlavor = " Oh, you remembered my birthday? It's not my birthday. But fine, I'll take it.";
+            } else if (npc.hasDescriptivePersonalityTag("appreciative")) {
+                personalityFlavor = " That's so kind of you to think of me!";
             }
             else {
                 personalityFlavor = " That's very thoughtful of you.";
             }
+            // Further refinement if a specific item is mentioned in the gift context
+            // This part_plan is tricky with pure keyword spotting and would be better if "giving an item" is a distinct game action.
+            // For now, we assume the dialogue follows an actual "give <item>" command handled in main_game_loop.
+            // The main_game_loop would then call a function here to get a reaction *after* the gift is processed by RelationshipLogic.
+            // Let's add a new function for specific gift reactions.
+
         } else if (playerInput.includes("love") && relationship.score > RelationshipLogic.milestones.dating_potential) {
             baseResponse = `Oh, ${player.name}...`;
             if (npc.hasDescriptivePersonalityTag("dreamy") && npc.hasDescriptivePersonalityTag("optimistic")) {
@@ -178,17 +186,106 @@ class DialogueSystem {
 
 module.exports = new DialogueSystem(); // Singleton instance
 
+    /**
+     * Generates a more specific NPC reaction to a gift they just received.
+     * Called *after* RelationshipLogic has processed the gift.
+     * @param {string} playerId
+     * @param {string} npcId
+     * @param {object} giftedItem - The item object that was given.
+     * @param {number} giftPreferenceScore - The score NPC assigned to this gift.
+     * @returns {Promise<string>} - The NPC's thank you/reaction message.
+     */
+    async getGiftReactionResponse(playerId, npcId, giftedItem, giftPreferenceScore) {
+        const player = PlayerProfile.getPlayer(playerId);
+        const npc = NPCProfile.getNPC(npcId);
+        if (!player || !npc || !giftedItem) return "Oh... thanks.";
+
+        let reaction = "";
+        const itemName = giftedItem.itemId;
+        const itemType = giftedItem.type;
+        const itemMeta = giftedItem.metadata || {};
+
+        await new Promise(resolve => setTimeout(resolve, 200)); // Quick reaction
+
+        if (giftPreferenceScore > 15) { // Very liked gift
+            reaction = `Wow, ${player.name}! This ${itemName.replace(/_nft|_common|_rare/g, '')} is amazing! `;
+            if (npc.hasDescriptivePersonalityTag("extroverted")) reaction += "I absolutely LOVE it! You're the best! ";
+            else if (npc.hasDescriptivePersonalityTag("creative") && itemType === "ArtPieceNFT") reaction += `The ${itemMeta.style || 'style'} is just perfect. `;
+            else if (npc.hasDescriptivePersonalityTag("bookworm") && itemType === "PersonalizedCreationNFT") reaction += `A ${itemMeta.title || 'creation'} just for me? I'm speechless! `;
+            else reaction += "Thank you so much, this means a lot! ";
+        } else if (giftPreferenceScore > 5) { // Liked gift
+            reaction = `Oh, a ${itemName.replace(/_nft|_common|_rare/g, '')}! That's really nice, ${player.name}. `;
+            if (npc.hasDescriptivePersonalityTag("appreciative")) reaction += "I really appreciate this. ";
+            else if (npc.hasDescriptivePersonalityTag("introverted")) reaction += "It's... lovely. Thank you. ";
+            else reaction += "Thanks! ";
+            if (itemType === "MusicTrackNFT" && npc.baseRelationshipFactors.giftPreferences.likedGenres.includes(itemMeta.genre)) {
+                reaction += `I do enjoy ${itemMeta.genre} music. `;
+            }
+        } else if (giftPreferenceScore >= 0) { // Neutral or slightly liked
+            reaction = `Thanks for the ${itemName.replace(/_nft|_common|_rare/g, '')}, ${player.name}. `;
+            if (npc.hasDescriptivePersonalityTag("polite") || npc.dialogueStyle === "formal") reaction += "That was considerate of you. ";
+            else if (npc.hasDescriptivePersonalityTag("jaded")) reaction = `A ${itemName.replace(/_nft|_common|_rare/g, '')}, huh? Alright. Thanks, I guess. `;
+            else reaction += "It's the thought that counts. ";
+        } else { // Disliked gift
+            reaction = `Um, thanks for the ${itemName.replace(/_nft|_common|_rare/g, '')}, ${player.name}. `;
+            if (npc.hasDescriptivePersonalityTag("sarcastic")) reaction = `Oh, a ${itemName.replace(/_nft|_common|_rare/g, '')}. You really know how to spoil someone... not. `;
+            else if (npc.hasDescriptivePersonalityTag("pessimistic")) reaction += "Well, it's... an item. ";
+            else if (!npc.hasDescriptivePersonalityTag("rude")) reaction += "I'll... find a place for it. "; // Trying to be polite despite dislike
+            else reaction = `I... don't really like this, ${player.name}. But thanks for trying.`;
+        }
+
+        // Add personality-specific comments about the item itself
+        if (itemType === "WearableAccessoryNFT" && npc.hasDescriptivePersonalityTag("stylish")) {
+            if (giftPreferenceScore > 5 && itemMeta.style_tag && npc.baseRelationshipFactors.giftPreferences.likedStyles.includes(itemMeta.style_tag)) {
+                reaction += `This ${itemMeta.style_tag} ${itemMeta.slot || 'accessory'} is totally my vibe! `;
+            } else if (giftPreferenceScore < 0) {
+                reaction += `This ${itemMeta.style_tag || ''} style isn't quite me, though. `;
+            }
+        }
+        if (itemMeta.rarity && (itemMeta.rarity === "legendary" || itemMeta.rarity === "epic" || itemMeta.rarity === "unique_personal_creation") && giftPreferenceScore > 10) {
+            if (npc.hasDescriptivePersonalityTag("collector") || npc.hasDescriptivePersonalityTag("appreciative")) {
+                 reaction += `And it's so ${itemMeta.rarity}! That makes it extra special!`;
+            }
+        }
+
+
+        const finalReaction = reaction.trim();
+        player.addChatMessage(npcId, npc.name, finalReaction);
+        return finalReaction;
+    }
+}
+
+module.exports = new DialogueSystem(); // Singleton instance
+
 // Example Usage (conceptual)
 /*
-async function testDialogue() {
+async function testDialogueAndGift() {
     PlayerProfile.initializePlayer("player1", "Alex");
-    // Make sure RelationshipLogic is available if its milestones are used in DialogueSystem
-    // For testing, you might need to ensure NPCProfile is also initialized with new personality fields
-    NPCProfile.initializeNPC("npc_elara", "Elara", ["astronomy"], {}, ["optimistic", "dreamy"], "friendly", {});
-    const response = await DialogueSystem.getNPCResponse("player1", "npc_elara", "Hello Elara!");
-    console.log(`Elara says: "${response}"`);
-    const response2 = await DialogueSystem.getNPCResponse("player1", "npc_elara", "I love astronomy too!");
-    console.log(`Elara says: "${response2}"`);
+    NPCProfile.initializeNPC("npc_elara", "Elara", ["astronomy", "art"],
+        { intellect: 8 },
+        ["dreamy", "appreciative", "bookworm"],
+        "thoughtful",
+        { giftPreferences: {
+            likedTypes: ["ArtPieceNFT", "PersonalizedCreationNFT"],
+            likedStyles: ["impressionistic"],
+            specificItems: {"star_chart_nft": 20}
+        }});
+
+    const playerAlex = PlayerProfile.getPlayer("player1");
+    const elara = NPCProfile.getNPC("npc_elara");
+
+    // Simulate giving a star chart
+    const starChartItem = { itemId: "star_chart_nft", type: "ArtPieceNFT", metadata: { style: "celestial", rarity: "rare", title: "Star Chart" } };
+    playerAlex.inventory["star_chart_nft"] = { quantity: 1, ...starChartItem }; // Add to inventory for logic
+
+    const giftScore = elara.getGiftPreferenceValue(starChartItem);
+    RelationshipLogic.updateRelationshipScore("player1", "npc_elara", "received_gift", { itemId: "star_chart_nft" });
+
+    const reaction = await DialogueSystem.getGiftReactionResponse("player1", "npc_elara", starChartItem, giftScore);
+    console.log(`Elara's gift reaction: "${reaction}"`);
+
+    const genericResponse = await DialogueSystem.getNPCResponse("player1", "npc_elara", "What do you think of space?");
+    console.log(`Elara says: "${genericResponse}"`);
 }
-// testDialogue();
+// testDialogueAndGift();
 */

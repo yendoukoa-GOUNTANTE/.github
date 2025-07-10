@@ -42,18 +42,22 @@ LoveChatGame/
 *   **`PlayerProfile.js`**:
     *   Manages player data: ID, name, interests, personality, inventory, and relationship statuses with various NPCs (including chat history).
 *   **`NPCProfile.js`**:
-    *   Manages NPC data: ID, name, interests, `corePersonality` (numerical traits), `descriptivePersonalityTags` (e.g., "optimistic", "sarcastic", "bookworm"), dialogue style, and preferences (e.g., for gifts, interaction styles).
+    *   Manages NPC data: ID, name, interests, `corePersonality`, `descriptivePersonalityTags`, dialogue style.
+    *   Includes a detailed `giftPreferences` structure, allowing NPCs to have nuanced preferences for different NFT types (e.g., `MusicTrackNFT`, `ArtPieceNFT`), specific item IDs, genres, visual styles, and rarities.
 *   **`ai/DialogueSystem.js`**:
-    *   **Conceptual AI**: Simulates AI-driven NPC responses. Uses keyword matching, relationship scores, NPC dialogue style, and their `descriptivePersonalityTags` to generate varied dialogue, attempting to reflect their defined personalities.
+    *   **Conceptual AI**: Simulates AI-driven NPC responses. Uses keywords, relationship scores, NPC personality/style, and now includes a dedicated `getGiftReactionResponse` method to generate specific dialogue when an NPC receives a gift, reflecting their preference for that item.
     *   **Future AI Integration**: A real implementation would involve API calls to a backend service hosting a sophisticated language model (e.g., GPT, Claude) trained or fine-tuned for character-specific dialogue. The backend would handle the complexities of AI inference.
 *   **`blockchain/InventoryAndNFTs.js`**:
-    *   **Conceptual NFTs**: Manages the player's inventory, allowing items to be flagged as "NFTs".
-    *   Includes placeholder functions (`mintOrTransferNFT`, `verifyNFTOwnershipOnChain`) that simulate blockchain interactions like minting, transferring, and verifying ownership.
+    *   **Conceptual NFTs**: Manages the player's inventory. The `addItem` function is flexible enough to store various NFT types (`WearableAccessoryNFT`, `MusicTrackNFT`, `ArtPieceNFT`, `ExclusiveExperienceTicketNFT`, `PersonalizedCreationNFT`) with their specific metadata (e.g., genre, style_tag, rarity, slot).
+    *   Includes placeholder functions (`mintOrTransferNFT`, `verifyNFTOwnershipOnChain`) that simulate blockchain interactions.
     *   **Future Blockchain Integration**: Would require:
         *   Smart contracts (e.g., ERC-721, ERC-1155 for NFTs) deployed on a chosen blockchain.
         *   A way for the game (likely via a backend or secure client-side wallet integration) to trigger smart contract functions.
         *   A way to query NFT ownership (e.g., reading contract state or using an indexer).
         *   Player wallet integration (e.g., MetaMask or a dedicated in-game wallet system).
+    *   See `docs/nft_acquisition_methods.md` for conceptual ways players might acquire these NFTs.
+*   **`docs/nft_acquisition_methods.md`**:
+    *   A document detailing various conceptual methods for players to obtain NFTs within the game (e.g., quest rewards, achievements, in-game shop, crafting).
 *   **`sandbox/SandboxIntegration.js`**:
     *   **Conceptual Sandbox**: Provides placeholder functions to simulate game actions manifesting in a virtual world. Examples: triggering animations, displaying notifications, initiating shared activities, spawning objects.
     *   **Future Sandbox Integration**: Would depend on the specific Sandbox platform chosen (e.g., The Sandbox Game, Decentraland, Roblox, Unreal Engine, Unity). Each platform has its own SDK/API for interacting with the game world, characters, and UI. The functions in this module would be implemented to call those specific SDK/API methods.
@@ -61,7 +65,7 @@ LoveChatGame/
 ### `game_logic/`
 
 *   **`RelationshipLogic.js`**:
-    *   Calculates and updates relationship scores between the player and NPCs based on interactions (dialogue choices, gifts given, shared interests discussed, activities completed).
+    *   Calculates and updates relationship scores. The logic for "received_gift" interactions now uses the detailed NPC gift preference scores (factoring in item type, metadata like genre/style, and rarity) to determine the impact on the relationship.
     *   Defines relationship milestones (e.g., acquaintance, friend, dating) that unlock new dialogue options or game content.
 
 ### `main_game_loop.js`
