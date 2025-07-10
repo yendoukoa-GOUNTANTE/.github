@@ -37,6 +37,15 @@ pwa-ai-blockchain/
 │   ├── manifest.json
 │   ├── popup.html
 │   └── popup.js
+├── firefox_extension/        # Firefox Extension wrapper
+│   ├── icons/
+│   │   ├── icon16.png
+│   │   ├── icon48.png
+│   │   └── icon128.png
+│   ├── background.js
+│   ├── manifest.json
+│   ├── popup.html
+│   └── popup.js
 ├── docs/                     # Additional documentation
 │   ├── alternative_hybrid_frameworks.md
 │   └── pwa_mobile_enhancements.md
@@ -74,9 +83,16 @@ pwa-ai-blockchain/
    - Located in the `chrome_extension/` directory.
    - A simple Manifest V3 extension.
    - Provides a popup to open the (hosted) PWA URL.
-   - **Note**: The PWA must be hosted at a public URL for the extension to open it as configured in `popup.js`.
+   - **Note**: The PWA must be hosted at a public URL for the extension to open it as configured in `chrome_extension/popup.js`.
 
-### 3. Conceptual Backend Proxy
+### 3. Firefox Add-on (Extension)
+   - Located in the `firefox_extension/` directory.
+   - A simple Manifest V3 compatible extension for Firefox.
+   - Uses `browser.*` namespace and event-driven background script.
+   - Provides a popup to open the (hosted) PWA URL.
+   - **Note**: The PWA must be hosted at a public URL for the extension to open it as configured in `firefox_extension/popup.js`.
+
+### 4. Conceptual Backend Proxy
    - Located in the `backend/` directory.
    - A Node.js Express server designed to act as a proxy for real AI/Blockchain API calls (currently mocks responses).
    - Includes a `Dockerfile` for containerization and a `Procfile` for Heroku deployment.
@@ -110,6 +126,15 @@ pwa-ai-blockchain/
 4.  Select the `pwa-ai-blockchain/chrome_extension` directory.
 5.  The extension icon should appear in your Chrome toolbar. Clicking it will show a popup.
 6.  **Important**: You need to update `pwa-ai-blockchain/chrome_extension/popup.js` with the actual hosted URL of your PWA for the "Open App" button to work correctly.
+
+### Firefox Add-on (Extension)
+1.  Open Firefox and navigate to `about:debugging`.
+2.  Click on "This Firefox" (or "This Nightly/Developer Edition").
+3.  Click "Load Temporary Add-on...".
+4.  Navigate to the `pwa-ai-blockchain/firefox_extension/` directory and select the `manifest.json` file (or any file in that directory, Firefox will find the manifest).
+5.  The extension icon should appear in your Firefox toolbar. Clicking it will show a popup.
+6.  **Important**: You need to update `pwa-ai-blockchain/firefox_extension/popup.js` with the actual hosted URL of your PWA for the "Open App" button to work correctly.
+    *   Note: Temporary add-ons are removed when Firefox is restarted. For persistent installation during development, you can package the add-on and self-sign it, or use the "web-ext" tool. For distribution, you'd submit to AMO (addons.mozilla.org).
 
 ### Backend Server
    - See instructions in `pwa-ai-blockchain/backend/README.md`.
