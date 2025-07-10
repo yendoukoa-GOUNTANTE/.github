@@ -247,16 +247,70 @@ async function gameLoop() {
                     console.log(`ALEX: Hey ${currentNpcInteractionTarget.name}, want to go for a walk in the Sandbox Park?`);
                     // NPC decides based on relationship, personality (mocked)
                     const playerProfile = PlayerProfile.getPlayer(currentPlayerId);
-                    const relationship = playerProfile.getRelationshipWith(currentNpcInteractionTarget.npcId);
-                    if (relationship.score > RelationshipLogic.milestones.friend_budding) {
-                        console.log(`${currentNpcInteractionTarget.name}: A walk? Sure, Alex, that sounds nice!`);
-                        await SandboxIntegration.initiateSandboxActivity(currentPlayerId, currentNpcInteractionTarget.npcId, "walk_in_park");
-                        RelationshipLogic.updateRelationshipScore(currentPlayerId, currentNpcInteractionTarget.npcId, "completed_shared_activity", { activityValue: 5, activityEnjoyedByNPC: true });
-                        console.log(`(You and ${currentNpcInteractionTarget.name} enjoy a pleasant walk in the virtual park.)`);
-                        // End interaction after activity for this simple loop
-                        currentNpcInteractionTarget = null;
+                        const relationshipWithTarget = playerProfile.getRelationshipWith(currentNpcInteractionTarget.npcId); // Renamed for clarity
+
+                        // Let DialogueSystem handle initial NPC response to "wanna hang out"
+                        // The actual initiation of activity will depend on this response or further player confirmation.
+                        // For this demo, if NPC seems willing from dialogue, we'll try to initiate.
+                        // A more robust system would have explicit "yes/no" from NPC that game loop acts on.
+
+                        if (npcResponse.toLowerCase().includes("sure") || npcResponse.toLowerCase().includes("sounds fun") || npcResponse.toLowerCase().includes("i'd like that")) {
+                            console.log(`ALEX: Great! Let's do that.`);
+                            const activityResult = await SandboxIntegration.initiateSandboxActivity(currentPlayerId, currentNpcInteractionTarget.npcId, "walk_in_park");
+                            if (activityResult.success) {
+                                RelationshipLogic.updateRelationshipScore(currentPlayerId, currentNpcInteractionTarget.npcId, "completed_shared_activity", {
+                                    activityValue: 5,
+                                    activityEnjoyedByNPC: true, // Assuming enjoyment for a simple walk if they agreed
+                                    activityType: "walk_in_park"
+                                });
+                                console.log(`(You and ${currentNpcInteractionTarget.name} enjoy a pleasant walk in the virtual park.)`);
+                                // Optionally, get post-activity dialogue
+                                const postActivityDialogue = await DialogueSystem.getActivityContextualDialogue(currentNpcInteractionTarget.npcId, "walk_in_park", "after_activity_generic_positive");
+                                if(postActivityDialogue) console.log(`${currentNpcInteractionTarget.name}: ${postActivityDialogue}`);
+                                currentNpcInteractionTarget = null; // End interaction after activity for this simple loop
+                            } else {
+                                console.log(`${currentNpcInteractionTarget.name}: (Activity initiation failed: ${activityResult.message})`);
+                            }
                     } else {
-                        console.log(`${currentNpcInteractionTarget.name}: Hmm, maybe some other time, Alex.`);
+                            // NPC declined or was non-committal in dialogue, so don't force activity.
+                            console.log(`ALEX: (Okay, maybe another time for a walk.)`);
+                        }
+                    } else if (playerInput.toLowerCase().includes("movie date") || playerInput.toLowerCase().includes("watch a movie")) {
+                        // Dialogue for movie invitation is already handled by getNPCResponse.
+                        // If NPC's response is positive, proceed.
+                         if (npcResponse.toLowerCase().includes("i'm in") || npcResponse.toLowerCase().includes("i'd like that") || npcResponse.toLowerCase().includes("sure, let's go")) {
+                            console.log(`ALEX: Awesome! Which movie sounds good? (System picks one for now)`);
+                            const activityResult = await SandboxIntegration.initiateSandboxActivity(currentPlayerId, currentNpcInteractionTarget.npcId, "virtual_movie_date");
+
+                            if (activityResult.success) {
+                                RelationshipLogic.updateRelationshipScore(currentPlayerId, currentNpcInteractionTarget.npcId, "completed_shared_activity", {
+                                    activityValue: 8, // Movie date might be higher value
+                                    movieEnjoymentFactor: activityResult.details?.movieEnjoymentFactor || 0,
+                                    activityType: "virtual_movie_date"
+                                });
+                                console.log(`(You and ${currentNpcInteractionTarget.name} watched ${activityResult.details?.chosenMovie || 'a movie'}.)`);
+
+                                // During movie comment (conceptual)
+                                const duringMovieComment = await DialogueSystem.getActivityContextualDialogue(currentNpcInteractionTarget.npcId, "virtual_movie_date", "during_movie_comment", { chosenMovie: activityResult.details?.chosenMovie });
+                                if(duringMovieComment) console.log(`(${currentNpcInteractionTarget.name} whispers: ${duringMovieComment})`);
+                                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate more movie time
+
+                                // After movie comment
+                                let afterMovieEvent = "after_movie_neutral";
+                                if ((activityResult.details?.movieEnjoymentFactor || 0) > 3) afterMovieEvent = "after_movie_liked";
+                                else if ((activityResult.details?.movieEnjoymentFactor || 0) < 0) afterMovieEvent = "after_movie_disliked";
+
+                                const afterMovieDialogue = await DialogueSystem.getActivityContextualDialogue(currentNpcInteractionTarget.npcId, "virtual_movie_date", afterMovieEvent, { chosenMovie: activityResult.details?.chosenMovie });
+                                if(afterMovieDialogue) console.log(`${currentNpcInteractionTarget.name}: ${afterMovieDialogue}`);
+
+                                currentNpcInteractionTarget = null; // End interaction
+                            } else {
+                                console.log(`${currentNpcInteractionTarget.name}: (Movie date initiation failed: ${activityResult.message})`);
+                                // NPC might have declined via SandboxIntegration logic if relationship wasn't high enough
+                                // or if DialogueSystem response was negative and we added a check here.
+                            }
+                        } else {
+                             console.log(`ALEX: (Okay, maybe another time for a movie.)`);
                     }
                 }
 
@@ -294,6 +348,7 @@ commandQueue = [
     "give star_chart_nft", // Elara: dreamy, introverted, bookworm, optimistic. Likes ArtPieceNFTs, celestial style. This is a specific preferred item.
     "how are you doing today elara?",
     "what are your plans for the future?",
+    "would you like to watch a movie with me?", // Invite Elara for a movie date
     "exit",
 
     "talk kai", // Kai: extroverted, energetic, sarcastic, laid_back, adventurous. Likes MusicTrackNFTs (rock/electronic), Wearables (cool).
@@ -303,7 +358,7 @@ commandQueue = [
     "what do you think about the future?",
     "give rock_anthem_track_rare", // Kai should like this (rock genre, rare)
     "give vintage_sunglasses_nft", // Kai might find these "cool" or "vintage" depending on his style interpretation.
-    "wanna hang out in the sandbox?",
+    "wanna hang out in the sandbox?", // Kai should be up for this
     "exit",
 
     "talk rian", // Rian: jaded, pessimistic, analytical, introverted, bookworm. Dislikes Music/Wearables. Might like insightful PersonalizedCreationNFTs.
@@ -313,6 +368,7 @@ commandQueue = [
     "what are your thoughts on the future?",
     "give lofi_music_track_common", // Rian should dislike this (MusicTrackNFT, lofi genre)
     "give poem_book_common", // Rian might be neutral or slightly positive if it's profound (bookworm)
+    "care to see a film? perhaps 'The Algorithm's Secret'?", // Invite Rian to a specific movie
     "exit",
 
     "quit"

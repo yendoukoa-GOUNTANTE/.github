@@ -126,7 +126,7 @@ pwa-ai-blockchain/
    - **iOS (WKWebView Wrapper)**: See `pwa-ai-blockchain/ios_webview_guide/README.md` for conceptually wrapping the PWA in a native iOS app.
    - **Alternative Hybrid Frameworks**: For more advanced native integration, see `pwa-ai-blockchain/docs/alternative_hybrid_frameworks.md`.
    - **PWA Mobile Enhancements**: Key considerations for a good mobile PWA experience are discussed in `pwa-ai-blockchain/docs/pwa_mobile_enhancements.md`.
-   - **Meta Quest (VR Headset)**: See `pwa-ai-blockchain/meta_quest_guide/README.md` for running as a PWA or packaged app, and notes on WebXR.
+   - **Meta Quest (VR Headset)**: See `pwa-ai-blockchain/meta_quest_guide/README.md` for running as a PWA or packaged app (via TWA method), and notes on WebXR. This guide has been updated with a more detailed step-by-step checklist for manual TWA/Bubblewrap deployment.
 
 ### Deploying to Netlify (Static Hosting)
 

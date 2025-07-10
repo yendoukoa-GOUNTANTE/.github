@@ -148,6 +148,30 @@ class DialogueSystem {
             else {
                 baseResponse = "Thinking about the future, are we?";
             }
+        } else if (playerInput.includes("movie date") || playerInput.includes("see a film") || playerInput.includes("watch a movie")) {
+            baseResponse = `A movie date, ${player.name}?`;
+            if (relationship.score < RelationshipLogic.milestones.crush_developing) {
+                if (npc.hasDescriptivePersonalityTag("polite") || npc.hasDescriptivePersonalityTag("shy")) {
+                    personalityFlavor = " That's a nice idea, but maybe when we know each other a bit better?";
+                } else if (npc.hasDescriptivePersonalityTag("sarcastic")) {
+                    personalityFlavor = " A movie? With me? Aren't we moving fast? Or are you just out of other ideas?";
+                } else {
+                    personalityFlavor = " I'm not sure I'm ready for that yet, but thanks for asking.";
+                }
+            } else { // Relationship score is high enough
+                if (npc.hasDescriptivePersonalityTag("extroverted") || npc.hasDescriptivePersonalityTag("adventurous")) {
+                    personalityFlavor = " Sounds like fun! I'm in! What should we watch?";
+                } else if (npc.hasDescriptivePersonalityTag("introverted") && !npc.hasDescriptivePersonalityTag("homebody")) {
+                    personalityFlavor = " A movie... that could be nice and quiet. Okay, I'd like that.";
+                } else if (npc.hasDescriptivePersonalityTag("homebody")) {
+                    personalityFlavor = " A movie is nice, but can we watch it at my virtual place instead of the big cinema? Just kidding... or am I? Sure, let's go.";
+                } else if (npc.hasDescriptivePersonalityTag("analytical")) {
+                    personalityFlavor = " A film exposition could be an intriguing shared experience. Which genre are you proposing?";
+                }
+                else {
+                    personalityFlavor = " Yes, I'd like that very much, " + player.name + ".";
+                }
+            }
         }
         else {
             // Default responses based on general style if no keywords hit strongly
@@ -253,6 +277,45 @@ module.exports = new DialogueSystem(); // Singleton instance
         player.addChatMessage(npcId, npc.name, finalReaction);
         return finalReaction;
     }
+
+    /**
+     * Generates contextual dialogue during/after a shared activity like a movie.
+     * @param {string} npcId
+     * @param {string} activityType - e.g., "virtual_movie_date"
+     * @param {string} eventPoint - e.g., "during_movie_comment", "after_movie_liked", "after_movie_disliked"
+     * @param {object} activityDetails - e.g., { chosenMovie: "Galaxy Explorers 3" }
+     * @returns {Promise<string>}
+     */
+    async getActivityContextualDialogue(npcId, activityType, eventPoint, activityDetails = {}) {
+        const npc = NPCProfile.getNPC(npcId);
+        if (!npc) return "";
+
+        let dialogue = "";
+        await new Promise(resolve => setTimeout(resolve, 150)); // Quick response
+
+        if (activityType === "virtual_movie_date") {
+            const movie = activityDetails.chosenMovie || "the movie";
+            if (eventPoint === "during_movie_comment") {
+                if (npc.hasDescriptivePersonalityTag("sarcastic")) dialogue = `(Whispering) This part_plan is SO predictable... or is it?`;
+                else if (npc.hasDescriptivePersonalityTag("analytical")) dialogue = `(Whispering) Interesting plot device they used there.`;
+                else if (npc.hasDescriptivePersonalityTag("extroverted")) dialogue = `(Whispering) Whoa, did you see that?!`;
+                else if (npc.hasDescriptivePersonalityTag("dreamy")) dialogue = `(Sighs contentedly during a romantic scene in '${movie}')`;
+                else dialogue = `(Quietly enjoys '${movie}')`;
+            } else if (eventPoint === "after_movie_liked") {
+                dialogue = `That was a great movie! I really enjoyed '${movie}'. Thanks for suggesting it!`;
+                if (npc.hasDescriptivePersonalityTag("bookworm") && movie.includes("Algorithm")) dialogue = `'${movie}' really made me think. We should discuss its themes.`;
+            } else if (eventPoint === "after_movie_disliked") {
+                dialogue = `Well, '${movie}' wasn't exactly my favorite.`;
+                if (npc.hasDescriptivePersonalityTag("pessimistic")) dialogue += ` But then again, few things are.`;
+                else if (npc.hasDescriptivePersonalityTag("polite")) dialogue += ` But I appreciate you taking me!`;
+                else dialogue += ` Maybe we can pick something different next time?`;
+            } else if (eventPoint === "after_movie_neutral") {
+                 dialogue = `'${movie}' was alright. It passed the time.`;
+            }
+        }
+        // player.addChatMessage(npcId, npc.name, dialogue); // Player ID needed for this
+        return dialogue;
+    }
 }
 
 module.exports = new DialogueSystem(); // Singleton instance
@@ -286,6 +349,9 @@ async function testDialogueAndGift() {
 
     const genericResponse = await DialogueSystem.getNPCResponse("player1", "npc_elara", "What do you think of space?");
     console.log(`Elara says: "${genericResponse}"`);
+
+    const movieComment = await DialogueSystem.getActivityContextualDialogue("npc_elara", "virtual_movie_date", "during_movie_comment", {chosenMovie: "Galaxy Explorers 3"});
+    console.log(`Elara (during movie): ${movieComment}`);
 }
 // testDialogueAndGift();
 */

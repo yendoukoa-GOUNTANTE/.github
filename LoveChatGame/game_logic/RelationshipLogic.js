@@ -102,6 +102,11 @@ class RelationshipLogic {
             case "completed_shared_activity":
                 scoreChange = params.activityValue || 5; // Default 5 points for an activity
                 if (params.activityEnjoyedByNPC) scoreChange += 3;
+                // For movie date, add specific enjoyment factor
+                if (interactionType === "completed_shared_activity" && params.activityType === "virtual_movie_date" && params.movieEnjoymentFactor !== undefined) {
+                    scoreChange += params.movieEnjoymentFactor;
+                    console.log(`Movie enjoyment factor for ${npc.name}: ${params.movieEnjoymentFactor}`);
+                }
                 break;
             default:
                 console.warn(`Unknown interaction type: ${interactionType}`);

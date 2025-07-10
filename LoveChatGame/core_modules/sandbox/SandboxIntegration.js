@@ -67,16 +67,78 @@ class SandboxIntegration {
      */
     async initiateSandboxActivity(playerId, npcId, activityType, activityParams = {}) {
         console.log(`[Sandbox] Initiating activity '${activityType}' between player ${playerId} and NPC ${npcId}. Params:`, activityParams);
+        const player = PlayerProfile.getPlayer(playerId);
+        const npc = NPCProfile.getNPC(npcId);
+        if (!player || !npc) {
+            console.error("[Sandbox] Player or NPC not found for activity.");
+            return { success: false, message: "Player or NPC not found." };
+        }
+
         // Conceptual:
-        // 1. Move player/NPC to activity location:
-        //    await this.sandboxAPI.teleportCharacter(playerId, activityLocation[activityType].playerStart);
-        //    await this.sandboxAPI.teleportCharacter(npcId, activityLocation[activityType].npcStart);
-        // 2. Trigger activity start:
-        //    return this.sandboxAPI.startActivity(activityType, { participants: [playerId, npcId], ...activityParams });
+        // 1. Check NPC willingness (could be more complex, involving NPC state, relationship score)
+        // This logic might live in RelationshipLogic or a new "ActivityManager" in a fuller game.
+        const relationship = player.getRelationshipWith(npcId);
+        let npcWilling = false;
+        if (activityType === "virtual_movie_date") {
+            if (relationship.score >= RelationshipLogic.milestones.crush_developing) { // Example threshold
+                npcWilling = true;
+                if (npc.hasDescriptivePersonalityTag("introverted") && Math.random() < 0.3) { // Introverts might sometimes decline
+                    // npcWilling = false;
+                    // console.log(`[Sandbox] ${npc.name} is feeling a bit too introverted for a movie date right now.`);
+                    // Forcing true for demo for now.
+                }
+            } else {
+                console.log(`[Sandbox] Relationship score with ${npc.name} (${relationship.score}) not high enough for a movie date.`);
+                return { success: false, message: `${npc.name} isn't ready for a movie date yet.` };
+            }
+        } else if (activityType === "walk_in_park") {
+            npcWilling = true; // Generally agreeable activity
+        }
+
+        if (!npcWilling && activityType === "virtual_movie_date") { // Check again for movie date specifically if logic above changes
+             return { success: false, message: `${npc.name} declined the ${activityType}.` };
+        }
+
+        // 2. Move player/NPC to activity location (mocked)
+        console.log(`[Sandbox] Teleporting ${player.name} and ${npc.name} to 'Sandbox Cinema' for '${activityType}'.`);
+        await this.triggerSandboxAnimation(playerId, "teleport_out");
+        await this.triggerSandboxAnimation(npcId, "teleport_out");
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate travel
+        await this.triggerSandboxAnimation(playerId, "teleport_in");
+        await this.triggerSandboxAnimation(npcId, "teleport_in");
+        console.log(`[Sandbox] Arrived at 'Sandbox Cinema'.`);
+
+        // 3. Activity specific logic (mocked)
+        if (activityType === "virtual_movie_date") {
+            const movies = ["Galaxy Explorers 3", "Romance in Paris", "The Algorithm's Secret", "Silent Hills VR"];
+            const chosenMovie = activityParams.movieTitle || movies[Math.floor(Math.random() * movies.length)];
+            console.log(`[Sandbox] ${player.name} and ${npc.name} are now watching '${chosenMovie}'.`);
+            await this.displaySandboxNotification(playerId, `Now watching: ${chosenMovie} with ${npc.name}.`);
+
+            // Simulate movie duration
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Short duration for demo
+            console.log(`[Sandbox] Movie '${chosenMovie}' finished.`);
+
+            // Conceptual: NPC reaction to movie influences relationship points
+            let movieEnjoymentFactor = 0;
+            if ((npc.hasInterest("sci-fi") && chosenMovie.includes("Galaxy")) || (npc.hasInterest("romance") && chosenMovie.includes("Paris"))) {
+                movieEnjoymentFactor = 5;
+            } else if (npc.hasDescriptivePersonalityTag("analytical") && chosenMovie.includes("Algorithm")) {
+                 movieEnjoymentFactor = 3;
+            } else if (chosenMovie.includes("Silent Hills") && npc.hasDescriptivePersonalityTag("adventurous")) {
+                movieEnjoymentFactor = 2;
+            } else if (chosenMovie.includes("Silent Hills") && npc.hasDescriptivePersonalityTag("timid")) { // Assuming 'timid' tag
+                movieEnjoymentFactor = -3; // Disliked scary movie
+            }
+
+
+            return { success: true, message: `Movie date with ${npc.name} to watch '${chosenMovie}' completed.`, details: { chosenMovie, movieEnjoymentFactor } };
+        }
+
+        // Fallback for other activities
         await new Promise(resolve => setTimeout(resolve, 500));
-        console.log(`[Sandbox] Activity '${activityType}' started. (Mocked)`);
-        // Potentially, the activity itself would emit events for success/failure/completion.
-        return true;
+        console.log(`[Sandbox] Activity '${activityType}' started/completed. (Mocked)`);
+        return { success: true, message: `Activity '${activityType}' completed.` };
     }
 
     /**

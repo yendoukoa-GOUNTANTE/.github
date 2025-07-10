@@ -45,7 +45,9 @@ LoveChatGame/
     *   Manages NPC data: ID, name, interests, `corePersonality`, `descriptivePersonalityTags`, dialogue style.
     *   Includes a detailed `giftPreferences` structure, allowing NPCs to have nuanced preferences for different NFT types (e.g., `MusicTrackNFT`, `ArtPieceNFT`), specific item IDs, genres, visual styles, and rarities.
 *   **`ai/DialogueSystem.js`**:
-    *   **Conceptual AI**: Simulates AI-driven NPC responses. Uses keywords, relationship scores, NPC personality/style, and now includes a dedicated `getGiftReactionResponse` method to generate specific dialogue when an NPC receives a gift, reflecting their preference for that item.
+    *   **Conceptual AI**: Simulates AI-driven NPC responses. Uses keywords, relationship scores, NPC personality/style.
+    *   Includes `getGiftReactionResponse` for specific dialogue upon receiving gifts.
+    *   Enhanced to provide dialogue for movie date invitations (acceptance/rejection based on relationship score & personality) and contextual comments during/after a movie date via `getActivityContextualDialogue`.
     *   **Future AI Integration**: A real implementation would involve API calls to a backend service hosting a sophisticated language model (e.g., GPT, Claude) trained or fine-tuned for character-specific dialogue. The backend would handle the complexities of AI inference.
 *   **`blockchain/InventoryAndNFTs.js`**:
     *   **Conceptual NFTs**: Manages the player's inventory. The `addItem` function is flexible enough to store various NFT types (`WearableAccessoryNFT`, `MusicTrackNFT`, `ArtPieceNFT`, `ExclusiveExperienceTicketNFT`, `PersonalizedCreationNFT`) with their specific metadata (e.g., genre, style_tag, rarity, slot).
@@ -59,13 +61,15 @@ LoveChatGame/
 *   **`docs/nft_acquisition_methods.md`**:
     *   A document detailing various conceptual methods for players to obtain NFTs within the game (e.g., quest rewards, achievements, in-game shop, crafting).
 *   **`sandbox/SandboxIntegration.js`**:
-    *   **Conceptual Sandbox**: Provides placeholder functions to simulate game actions manifesting in a virtual world. Examples: triggering animations, displaying notifications, initiating shared activities, spawning objects.
+    *   **Conceptual Sandbox**: Provides placeholder functions to simulate game actions manifesting in a virtual world.
+    *   Enhanced to include more detailed logic for `initiateSandboxActivity` for a "virtual_movie_date", including NPC willingness checks (conceptual), teleportation simulation, movie selection, and returning enjoyment factors.
     *   **Future Sandbox Integration**: Would depend on the specific Sandbox platform chosen (e.g., The Sandbox Game, Decentraland, Roblox, Unreal Engine, Unity). Each platform has its own SDK/API for interacting with the game world, characters, and UI. The functions in this module would be implemented to call those specific SDK/API methods.
 
 ### `game_logic/`
 
 *   **`RelationshipLogic.js`**:
-    *   Calculates and updates relationship scores. The logic for "received_gift" interactions now uses the detailed NPC gift preference scores (factoring in item type, metadata like genre/style, and rarity) to determine the impact on the relationship.
+    *   Calculates and updates relationship scores. The logic for "received_gift" interactions now uses the detailed NPC gift preference scores.
+    *   The "completed_shared_activity" interaction now specifically handles `virtual_movie_date` by incorporating a `movieEnjoymentFactor` into the score change.
     *   Defines relationship milestones (e.g., acquaintance, friend, dating) that unlock new dialogue options or game content.
 
 ### `main_game_loop.js`
