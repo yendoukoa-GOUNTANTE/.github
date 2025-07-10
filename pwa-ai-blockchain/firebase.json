@@ -1,0 +1,73 @@
+{
+  "hosting": {
+    "public": "public", // Specifies that the 'public' directory contains the static assets to be deployed.
+    "ignore": [
+      "firebase.json", // Ignores this file itself from being deployed.
+      "**/.*",         // Ignores hidden files (e.g., .git, .DS_Store).
+      "**/node_modules/**" // Ignores node_modules folders if any were present at the root.
+    ],
+    "rewrites": [
+      {
+        // SPA fallback: Serves index.html for all routes that are not direct file paths.
+        // This allows client-side routing to work correctly if the PWA were to use it.
+        // For the current single-page PWA, it ensures that direct navigation to a
+        // non-existent path still loads the app.
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        // Cache policy for service worker:
+        // - Do not cache (max-age=0, must-revalidate) to ensure the browser always fetches the latest sw.js.
+        // - Service-Worker-Allowed: '/' allows the service worker to control pages at the root scope.
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          },
+          {
+            "key": "Service-Worker-Allowed",
+            "value": "/"
+          }
+        ]
+      },
+      {
+        // Cache policy for immutable assets (versioned filenames recommended for these in real apps)
+        // For assets like CSS, JS, images that have unique names per version (e.g., app.[hash].js)
+        // you can set a long cache duration. Since our filenames are static, we'll use a moderate cache.
+        "source": "/@(css|js|images)/**", // Matches files in css, js, images folders
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable" // Cache for 1 year, immutable if fingerprinted
+          }
+        ]
+      },
+      {
+        // General security headers for all HTML pages (can be applied to other content types too)
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+          // Add Content-Security-Policy here if needed, e.g.:
+          // {
+          //   "key": "Content-Security-Policy",
+          //   "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
+          // }
+        ]
+      }
+    ]
+  }
+}
