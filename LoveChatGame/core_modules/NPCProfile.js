@@ -8,37 +8,51 @@
 const npcs = {}; // In-memory store for NPC data
 
 class NPCProfile {
-    constructor(npcId, name, interests = [], personalityTraits = {}, dialogueStyle = "friendly", baseRelationshipFactors = {}) {
+    /**
+     * Creates an NPC profile.
+     * @param {string} npcId - Unique ID for the NPC.
+     * @param {string} name - NPC's name.
+     * @param {string[]} interests - Array of interests (e.g., ["hiking", "coding"]).
+     * @param {object} corePersonality - Core numerical traits (e.g., { "patience": 9, "wit": 7 }).
+     * @param {string[]} descriptivePersonalityTags - Array of descriptive tags (e.g., ["optimistic", "bookworm"]).
+     * @param {string} dialogueStyle - General style of dialogue (e.g., "friendly", "sarcastic").
+     * @param {object} baseRelationshipFactors - Factors influencing relationship changes.
+     */
+    constructor(npcId, name, interests = [], corePersonality = {}, descriptivePersonalityTags = [], dialogueStyle = "friendly", baseRelationshipFactors = {}) {
         if (npcs[npcId]) {
             throw new Error(`NPC with ID ${npcId} already exists.`);
         }
         this.npcId = npcId;
         this.name = name;
-        this.interests = new Set(interests); // e.g., ["hiking", "coding", "jazz"]
-        this.personalityTraits = personalityTraits; // e.g., { "patience": 9, "shyness": 6, "wit": 7 }
+        this.interests = new Set(interests.map(i => i.toLowerCase()));
+        this.corePersonality = corePersonality; // e.g., { "patience": 9, "shyness": 6, "wit": 7 }
+        this.descriptivePersonalityTags = new Set(descriptivePersonalityTags.map(t => t.toLowerCase())); // e.g., ["optimistic", "introverted", "bookworm"]
         this.dialogueStyle = dialogueStyle; // e.g., "friendly", "sarcastic", "shy", "formal"
-        // Base factors influencing how relationship score changes with this NPC
-        this.baseRelationshipFactors = { // How this NPC reacts to certain player actions/traits
-            likesInterestsInCommon: baseRelationshipFactors.likesInterestsInCommon || 2, // Points per common interest
-            prefersCompliments: baseRelationshipFactors.prefersCompliments || true,
-            dislikesRudeness: baseRelationshipFactors.dislikesRudeness || true,
-            giftPreferences: baseRelationshipFactors.giftPreferences || {} // e.g., { "rose_nft": 10, "book_common": 2 }
+
+        this.baseRelationshipFactors = {
+            likesInterestsInCommon: baseRelationshipFactors.likesInterestsInCommon || 2,
+            prefersCompliments: baseRelationshipFactors.prefersCompliments !== undefined ? baseRelationshipFactors.prefersCompliments : true,
+            dislikesRudeness: baseRelationshipFactors.dislikesRudeness !== undefined ? baseRelationshipFactors.dislikesRudeness : true,
+            giftPreferences: baseRelationshipFactors.giftPreferences || {}
         };
-        // NPCs don't store player relationships directly; PlayerProfile stores its relationship with each NPC.
 
         npcs[npcId] = this;
-        console.log(`NPC profile created for ${name} (ID: ${npcId})`);
+        console.log(`NPC profile created for ${name} (ID: ${npcId}) with tags: [${Array.from(this.descriptivePersonalityTags).join(', ')}]`);
     }
 
     static getNPC(npcId) {
         return npcs[npcId];
     }
 
-    static initializeNPC(npcId, name, interests, personalityTraits, dialogueStyle, baseRelationshipFactors) {
+    static initializeNPC(npcId, name, interests, corePersonality, descriptivePersonalityTags, dialogueStyle, baseRelationshipFactors) {
         if (!npcs[npcId]) {
-            return new NPCProfile(npcId, name, interests, personalityTraits, dialogueStyle, baseRelationshipFactors);
+            return new NPCProfile(npcId, name, interests, corePersonality, descriptivePersonalityTags, dialogueStyle, baseRelationshipFactors);
         }
         return npcs[npcId];
+    }
+
+    hasDescriptivePersonalityTag(tag) {
+        return this.descriptivePersonalityTags.has(tag.toLowerCase());
     }
 
     hasInterest(interest) {
@@ -54,7 +68,8 @@ class NPCProfile {
             npcId: this.npcId,
             name: this.name,
             interests: Array.from(this.interests),
-            personalityTraits: this.personalityTraits,
+            corePersonality: this.corePersonality,
+            descriptivePersonalityTags: Array.from(this.descriptivePersonalityTags),
             dialogueStyle: this.dialogueStyle,
             relationshipFactors: this.baseRelationshipFactors
         };

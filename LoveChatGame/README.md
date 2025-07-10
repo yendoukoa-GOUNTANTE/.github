@@ -42,9 +42,9 @@ LoveChatGame/
 *   **`PlayerProfile.js`**:
     *   Manages player data: ID, name, interests, personality, inventory, and relationship statuses with various NPCs (including chat history).
 *   **`NPCProfile.js`**:
-    *   Manages NPC data: ID, name, interests, personality, dialogue style, and preferences (e.g., for gifts, interaction styles).
+    *   Manages NPC data: ID, name, interests, `corePersonality` (numerical traits), `descriptivePersonalityTags` (e.g., "optimistic", "sarcastic", "bookworm"), dialogue style, and preferences (e.g., for gifts, interaction styles).
 *   **`ai/DialogueSystem.js`**:
-    *   **Conceptual AI**: Simulates AI-driven NPC responses. Currently uses basic keyword matching and NPC personality traits to generate dialogue.
+    *   **Conceptual AI**: Simulates AI-driven NPC responses. Uses keyword matching, relationship scores, NPC dialogue style, and their `descriptivePersonalityTags` to generate varied dialogue, attempting to reflect their defined personalities.
     *   **Future AI Integration**: A real implementation would involve API calls to a backend service hosting a sophisticated language model (e.g., GPT, Claude) trained or fine-tuned for character-specific dialogue. The backend would handle the complexities of AI inference.
 *   **`blockchain/InventoryAndNFTs.js`**:
     *   **Conceptual NFTs**: Manages the player's inventory, allowing items to be flagged as "NFTs".

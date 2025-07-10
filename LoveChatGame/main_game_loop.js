@@ -10,7 +10,7 @@ const SandboxIntegration = require('./core_modules/sandbox/SandboxIntegration');
 
 // --- Game Setup ---
 let currentPlayerId = null;
-const npcsInScene = ["npc_elara", "npc_kai"]; // NPCs available to interact with
+// const npcsInScene = ["npc_elara", "npc_kai", "npc_rian"]; // NPCs available to interact with (now derived from NPCProfile.npcs)
 
 function initializeGame() {
     console.log("Initializing Love Chat Game...");
@@ -22,17 +22,27 @@ function initializeGame() {
     // Create NPCs
     NPCProfile.initializeNPC(
         "npc_elara", "Elara",
-        ["astronomy", "poetry", "art"],
-        { "intellect": 8, "dreamy": 7, "patience": 9 },
-        "thoughtful",
-        { likesInterestsInCommon: 3, giftPreferences: { "star_chart_nft": 15, "poem_book_common": 5, "painting_tools_rare": 10 } }
+        ["astronomy", "poetry", "art"], // Interests
+        { "intellect": 8, "patience": 9 }, // Core Personality Traits
+        ["dreamy", "introverted", "bookworm", "optimistic"], // Descriptive Personality Tags
+        "thoughtful", // Dialogue Style
+        { likesInterestsInCommon: 3, giftPreferences: { "star_chart_nft": 15, "poem_book_common": 5, "painting_tools_rare": 10 } } // Relationship Factors
     );
     NPCProfile.initializeNPC(
         "npc_kai", "Kai",
-        ["music", "skateboarding", "gaming"],
-        { "creativity": 9, "energetic": 8, "wit": 6 },
-        "friendly",
-        { likesInterestsInCommon: 2, giftPreferences: { "concert_ticket_nft": 20, "new_deck_rare": 12, "gaming_headset_common": 5 } }
+        ["music", "skateboarding", "gaming"], // Interests
+        { "creativity": 9, "wit": 6 }, // Core Personality Traits
+        ["extroverted", "energetic", "sarcastic", "laid_back", "adventurous"], // Descriptive Personality Tags
+        "friendly", // Dialogue Style
+        { likesInterestsInCommon: 2, giftPreferences: { "concert_ticket_nft": 20, "new_deck_rare": 12, "gaming_headset_common": 5 } } // Relationship Factors
+    );
+    NPCProfile.initializeNPC(
+        "npc_rian", "Rian",
+        ["philosophy", "history", "chess"], // Interests
+        { "analytical": 9, "patience": 7 }, // Core
+        ["jaded", "pessimistic", "analytical", "introverted"], // Descriptive
+        "formal", // Dialogue Style
+        { likesInterestsInCommon: 1, giftPreferences: { "old_tome_nft": 25, "chess_set_rare": 10 }, prefersCompliments: false }
     );
 
     // Give player some initial items (conceptual)
@@ -210,17 +220,39 @@ commandQueue = [
     "hello there!",
     "i heard you like art and poetry?",
     "give poem_book_common", // Give Elara the common poem book
-    "i also have this star_chart_nft for you", // This will fail as "give" keyword is needed
-    "give star_chart_nft", // Give Elara the NFT
-    "how are you doing today elara?",
-    "let's go for a walk sometime?", // This might be too soon for Elara
+    "i also have this star_chart_nft for you", // This will still fail as "give" keyword is needed.
+    "give star_chart_nft", // Give Elara the NFT (Elara: dreamy, introverted, bookworm, optimistic)
+    "how are you doing today elara?", // Elara should be optimistic
+    "what are your plans for the future?", // Elara (optimistic) vs Kai (laid_back/adventurous) vs Rian (pessimistic/jaded)
+    "let's go for a walk sometime?", // Test Elara's introverted nature vs. relationship score
     "exit", // Stop talking to Elara
-    "talk kai", // Start talking to Kai
-    "hey kai, what's up?",
-    "i like music and gaming too!",
-    "wanna hang out in the sandbox?", // Kai might be more open
+
+    "talk kai", // Start talking to Kai (extroverted, energetic, sarcastic, laid_back, adventurous)
+    "hey kai, what's up?", // Kai should be energetic/extroverted
+    "i like music and gaming too!", // Kai is interested
+    "how are you?", // Kai should be laid_back
+    "what do you think about the future?", // Kai should be laid_back/adventurous
+    "give concert_ticket_nft", // Assuming player has this (add to inventory for test)
+    "wanna hang out in the sandbox?", // Kai might be more open due to adventurous/extroverted
     "exit",
+
+    "talk rian", // Start talking to Rian (jaded, pessimistic, analytical, introverted)
+    "hello rian.", // Rian should be formal/introverted
+    "how are you today?", // Rian should be pessimistic/jaded
+    "i find philosophy interesting.", // Rian is interested, but analytical
+    "what are your thoughts on the future?", // Rian should be pessimistic/jaded
+    "i have a gift for you.", // Rian's reaction to gift intent (jaded?)
+    "exit",
+
     "quit"
 ];
+
+// Add concert_ticket_nft to player inventory for Kai interaction
+InventoryAndNFTs.addItem(currentPlayerId, "concert_ticket_nft", 1, "collectible_rare_nft", {
+    description: "Exclusive ticket to that band Kai likes.",
+    token_id: "CT456",
+    rarity: "rare"
+});
+
 
 gameLoop();
