@@ -1,0 +1,47 @@
+{
+    "manifest_version": 3,
+    "name": "PWA AI Blockchain Viewer (Firefox)",
+    "version": "1.0",
+    "description": "A simple extension to open the PWA AI Blockchain application in Firefox.",
+    "permissions": [
+        "tabs"
+        // "tabs" permission is good practice for browser.tabs.create,
+        // though for just opening a new tab with an external URL, it might not always be strictly enforced.
+        // No host permissions are needed as we are not interacting with page content.
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        },
+        "default_title": "Open PWA"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "background": {
+        "scripts": ["background.js"]
+        // For MV3, Firefox uses event-driven background scripts.
+        // "persistent": false is the default for MV3 background scripts.
+        // If a true service worker was needed and supported for a specific feature:
+        // "service_worker": "background_sw.js"
+        // But for this simple case, "scripts" is more straightforward for Firefox.
+    },
+    "developer": { // Optional: For display in about:addons
+        "name": "AI Jules",
+        "url": "https://example.com"
+    },
+    // browser_specific_settings is useful for providing a Gecko (Firefox) specific ID
+    // which helps maintain a consistent add-on ID across updates if not published on AMO.
+    // It's also where you'd specify update URL if self-hosting.
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "pwa-ai-blockchain-viewer@example.com", // Replace with your own unique ID
+            "strict_min_version": "109.0" // Example: Specify min Firefox version if known features are used
+        }
+    }
+}
