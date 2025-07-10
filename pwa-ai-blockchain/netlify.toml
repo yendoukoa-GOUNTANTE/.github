@@ -1,0 +1,60 @@
+# Netlify configuration file for the PWA
+
+[build]
+  # This assumes your PWA's static files are in the 'public' directory
+  # relative to the root of your pwa-ai-blockchain repository.
+  # If you only commit the 'pwa-ai-blockchain' folder to a repo,
+  # and 'public' is inside it, Netlify's base would be the repo root.
+  # If 'pwa-ai-blockchain' is the repo root, then 'public' is correct.
+  publish = "public/"
+  # No build command is needed for a simple static site like this
+  # If you had a build step (e.g., for React, Vue, SASS), you'd specify it here:
+  # command = "npm run build"
+
+[[headers]]
+  # Define security headers and caching policies for all pages
+  for = "/*"
+  [headers.values]
+    # Content Security Policy (CSP) - Example, customize as needed
+    # This is a very basic CSP. A real one would be more restrictive
+    # and tailored to your specific needs and third-party services.
+    # Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
+
+    # X-Frame-Options to prevent clickjacking
+    X-Frame-Options = "DENY"
+    # X-Content-Type-Options to prevent MIME sniffing
+    X-Content-Type-Options = "nosniff"
+    # Referrer-Policy for privacy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Permissions-Policy (Feature-Policy) - Example
+    # Permissions-Policy = "geolocation=(), microphone=()"
+
+    # Cache control for static assets (immutable if versioned in filenames)
+    # For app shell files (like index.html, sw.js), you might want different caching.
+    # Netlify handles ETags well, which helps with caching.
+
+[[redirects]]
+  # Single Page Application (SPA) redirect rule:
+  # This ensures that any direct navigation to a path that's part_plan of your
+  # client-side routing (if you had any, not currently in this PWA)
+  # still serves the index.html, allowing the client-side router to take over.
+  # For this simple PWA with no client-side routing beyond index.html,
+  # this might not be strictly necessary but is good practice for SPAs.
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Note: If your PWA's assets (CSS, JS, images) are not found and you have the SPA
+# redirect rule above, they might incorrectly serve index.html. Ensure your asset
+# paths are correct. For this project, all assets are relative to index.html
+# in the same 'public' directory, so it should be fine.
+
+# For service workers, ensure sw.js is served with the correct Content-Type
+# (application/javascript) and ideally from the root scope. Netlify usually handles this.
+# You might add specific headers for sw.js if needed:
+# [[headers]]
+#   for = "/sw.js"
+#   [headers.values]
+#     Service-Worker-Allowed = "/"
+#     Cache-Control = "public, max-age=0, must-revalidate" # Ensure fresh SW
+#     Content-Type = "application/javascript"

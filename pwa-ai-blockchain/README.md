@@ -19,23 +19,66 @@ This project is a Progressive Web App (PWA) designed to demonstrate a conceptual
 
 ```
 pwa-ai-blockchain/
-├── public/
+├── backend/                  # Conceptual Node.js backend proxy
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── server.js
+│   └── README.md
+├── chrome_extension/         # Chrome Extension wrapper
+│   ├── icons/
+│   │   ├── icon16.png
+│   │   ├── icon48.png
+│   │   └── icon128.png
+│   ├── background.js
+│   ├── manifest.json
+│   ├── popup.html
+│   └── popup.js
+├── public/                   # PWA static assets
 │   ├── css/
-│   │   └── style.css         # Main stylesheet
+│   │   └── style.css
 │   ├── images/
-│   │   ├── icon-192x192.png  # PWA icon
-│   │   └── icon-512x512.png  # PWA icon
+│   │   ├── icon-192x192.png
+│   │   └── icon-512x512.png
 │   ├── js/
-│   │   └── app.js            # Main application logic, AI/Blockchain mocks
-│   ├── index.html            # Main HTML file
-│   ├── manifest.json         # PWA manifest file
-│   └── sw.js                 # Service worker script
-└── README.md                 # This file
+│   │   └── app.js
+│   ├── index.html
+│   ├── manifest.json
+│   └── sw.js
+├── netlify.toml              # Netlify deployment configuration
+├── README.md                 # This main project README
+└── TESTING_STRATEGY.md       # Document outlining testing approaches
 ```
+
+## Components
+
+### 1. PWA (Progressive Web App)
+   - Located in the `public/` directory.
+   - Vanilla HTML, CSS, and JavaScript.
+   - Service worker (`sw.js`) for offline caching.
+   - Manifest file (`manifest.json`) for PWA properties.
+   - Mock AI and Blockchain feature interactions in `js/app.js`.
+
+### 2. Chrome Extension Wrapper
+   - Located in the `chrome_extension/` directory.
+   - A simple Manifest V3 extension.
+   - Provides a popup to open the (hosted) PWA URL.
+   - **Note**: The PWA must be hosted at a public URL for the extension to open it as configured in `popup.js`.
+
+### 3. Conceptual Backend Proxy
+   - Located in the `backend/` directory.
+   - A Node.js Express server designed to act as a proxy for real AI/Blockchain API calls (currently mocks responses).
+   - Includes a `Dockerfile` for containerization.
+   - See `backend/README.md` for more details on running this server.
+
+### 4. Deployment & Testing
+   - `netlify.toml`: Configuration for deploying the static PWA to Netlify.
+   - `TESTING_STRATEGY.md`: Outlines approaches for testing different parts of the application.
+
 
 ## How to Run
 
-1.  Serve the `public` directory using a local web server. For example, using Python's built-in server:
+### PWA (Locally)
+1.  Serve the `pwa-ai-blockchain/public` directory using a local web server. For example, using Python:
     ```bash
     cd pwa-ai-blockchain/public
     python -m http.server
@@ -44,10 +87,41 @@ pwa-ai-blockchain/
     ```bash
     npm install -g http-server
     cd pwa-ai-blockchain/public
-    http-server -c-1 # -c-1 disables caching for easier development updates
-    ```
+    http-server -c-1
 2.  Open your browser and navigate to the local server address (e.g., `http://localhost:8000` or `http://localhost:8080`).
 3.  You can test PWA features using browser developer tools (e.g., Lighthouse, Application tab in Chrome DevTools).
+
+### Chrome Extension
+1.  Open Chrome and navigate to `chrome://extensions`.
+2.  Enable "Developer mode" (usually a toggle in the top right).
+3.  Click "Load unpacked".
+4.  Select the `pwa-ai-blockchain/chrome_extension` directory.
+5.  The extension icon should appear in your Chrome toolbar. Clicking it will show a popup.
+6.  **Important**: You need to update `pwa-ai-blockchain/chrome_extension/popup.js` with the actual hosted URL of your PWA for the "Open App" button to work correctly.
+
+### Backend Server
+   - See instructions in `pwa-ai-blockchain/backend/README.md`.
+
+### Deploying to Netlify (Static Hosting)
+
+The PWA is configured for easy deployment to static hosting providers like Netlify.
+
+1.  **Prerequisites**:
+    *   A Netlify account.
+    *   Your project pushed to a Git repository (GitHub, GitLab, Bitbucket).
+2.  **Setup on Netlify**:
+    *   Log in to your Netlify account.
+    *   Click "New site from Git".
+    *   Choose your Git provider and select the repository for this project.
+    *   Configure the build settings:
+        *   **Base directory**: If your `netlify.toml` and `public` folder are in the `pwa-ai-blockchain` subfolder of your repo, you might set this to `pwa-ai-blockchain`. If `pwa-ai-blockchain` is the root of your repo, leave this blank or as `/`.
+        *   **Build command**: Leave this blank (as there's no build step for this simple static site).
+        *   **Publish directory**: Set this to `public` (if your base directory is `pwa-ai-blockchain`) or `pwa-ai-blockchain/public` (if your base directory is the repo root). This should match the `publish` setting in `netlify.toml`.
+    *   Netlify will use the `netlify.toml` file in the root of your specified base directory for configuration (e.g., for SPA redirects).
+    *   Deploy the site.
+3.  **Access your deployed PWA** via the URL provided by Netlify.
+
+The `netlify.toml` file included in this project provides basic configuration for serving the PWA, including an SPA redirect rule which is good practice, though not strictly necessary for this single-page PWA.
 
 ## Conceptual Integration of Actual Services
 
