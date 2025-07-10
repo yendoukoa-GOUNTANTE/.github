@@ -1,0 +1,130 @@
+# GitHub Actions workflow for deploying the PWA to GitHub Pages
+name: Deploy PWA to GitHub Pages
+
+on:
+  # Runs on pushes targeting the default branch (e.g., main or master)
+  push:
+    branches:
+      - main # Or your default branch name, e.g., master
+    paths:
+      - 'pwa-ai-blockchain/public/**' # Only run if files in public/ change
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # If your PWA is in a subdirectory (e.g., pwa-ai-blockchain is not the repo root)
+          # and you need the whole repo history for some reason (unlikely for static deploy),
+          # you might adjust path or fetch depth. For simple static deploy, this is fine.
+          fetch-depth: 0
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Path to the static assets to deploy.
+          # This assumes the workflow is run from the root of a repository
+          # where 'pwa-ai-blockchain/public/' is the correct path to your PWA files.
+          # If 'pwa-ai-blockchain' is the root of your repository, then path should be 'public/'
+          # Adjust this path according to your repository structure.
+          # For this example, we assume 'pwa-ai-blockchain' is a folder within the repo root.
+          path: './pwa-ai-blockchain/public'
+          # If your repository IS the pwa-ai-blockchain directory itself, then use:
+          # path: './public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        # This action will deploy the artifact uploaded in the previous step.
+        # The URL will be available as ${{ steps.deployment.outputs.page_url }}
+
+# Instructions for user:
+# 1. Repository Settings:
+#    - Go to your GitHub repository > Settings > Pages.
+#    - Under "Build and deployment", for "Source", select "GitHub Actions".
+# 2. Base Path for PWA:
+#    - If your repository is named `your-username.github.io`, GitHub Pages serves from the root.
+#      Your PWA's `start_url` in `manifest.json` ("/") and asset paths should be fine.
+#    - If your repository is named something else (e.g., `my-pwa-project`), GitHub Pages will serve
+#      it from a subpath like `https://your-username.github.io/my-pwa-project/`.
+#      In this case, you MUST update:
+#      a. `pwa-ai-blockchain/public/manifest.json`:
+#         - Change `"start_url": "/index.html"` to `"start_url": "/my-pwa-project/"` (or just `/my-pwa-project`).
+#         - Consider adding `"scope": "/my-pwa-project/"`.
+#      b. All absolute paths in your `index.html` and `sw.js` for CSS, JS, images, and cached URLs
+#         must be prefixed with `/my-pwa-project`. E.g., `/css/style.css` becomes `/my-pwa-project/css/style.css`.
+#         It's often easier to use relative paths throughout your PWA if deploying to a subpath.
+#         The current PWA uses relative paths like `css/style.css` which should work okay from `index.html`,
+#         but the service worker's `urlsToCache` list uses absolute paths from root (e.g., `/index.html`).
+#         These would need to be adjusted if served from a subpath:
+#         urlsToCache = [ '/my-pwa-project/', '/my-pwa-project/index.html', ... ];
+#
+# This workflow is a general template. You might need to adjust `paths` trigger and `path` in `upload-pages-artifact`
+# based on whether `pwa-ai-blockchain` is the root of your repository or a subdirectory.
+# If `pwa-ai-blockchain` is the repo root, then the upload path should be './public'.
+# If `pwa-ai-blockchain` is a subfolder in a larger repo, then './pwa-ai-blockchain/public' is correct.
+# For simplicity, this template assumes `pwa-ai-blockchain` is a folder within the repo.
+# If it's the root, change path in `upload-pages-artifact` to './public'.
+#
+# Also, the `on.push.paths` filter should reflect the correct path to your PWA's public files
+# relative to the repository root.
+# If repo root IS 'pwa-ai-blockchain', then paths should be 'public/**'.
+# If 'pwa-ai-blockchain' is a subfolder, then 'pwa-ai-blockchain/public/**' is correct.
+# This template assumes the latter.
+#
+# After committing this file to `.github/workflows/`, GitHub Actions should automatically pick it up.
+# You may need to trigger it manually for the first deployment or push a change to the specified paths.
+# Check the "Actions" tab in your GitHub repository for workflow runs.
+#
+# IMPORTANT for Service Worker:
+# If deploying to a subpath (e.g., `your-username.github.io/repo-name/`), the service worker scope
+# can be tricky. Ensure `sw.js` is served from the correct scope and its internal paths are correct.
+# The `Service-Worker-Allowed: '/'` header might need adjustment or careful handling if your
+# `index.html` is not at the root of the GitHub Pages site.
+# Using `navigator.serviceWorker.register('/repo-name/sw.js', { scope: '/repo-name/' })` in `app.js`
+# and adjusting cached URLs in `sw.js` is crucial for subpath deployments.
+# The current PWA's `sw.js` and `app.js` assume root deployment.
+#
+# This workflow uses the newer `actions/configure-pages`, `actions/upload-pages-artifact`,
+# and `actions/deploy-pages` actions which are the recommended way for GitHub Pages deployments.
+# It does not require manually creating a `gh-pages` branch.
+#
+# Final check: The `start_url` in `manifest.json` and the scope of the service worker registration
+# are the most common points of failure for PWAs on GitHub Pages subpaths.
+# The `index.html` also needs to correctly reference the manifest.json (e.g. `/repo-name/manifest.json`).
+# Using relative paths for everything within the `public` folder is the safest bet for easy deployment
+# to various subpaths or root.
+# The current PWA uses relative paths for CSS/JS from index.html, but absolute for SW caching.
+# This will need adjustment for GitHub Pages subpath deployment.
+# For a root deployment (e.g. on a `username.github.io` repo), it should be mostly fine.
+#
+# The paths in this workflow (trigger and artifact upload) are set assuming that the
+# `pwa-ai-blockchain` directory (containing `public/`) is NOT the root of the GitHub repository,
+# but a subdirectory within it. If `pwa-ai-blockchain` IS the root of your repository,
+# you should change:
+#   on.push.paths: from 'pwa-ai-blockchain/public/**' to 'public/**'
+#   steps.upload-pages-artifact.with.path: from './pwa-ai-blockchain/public' to './public'
+# This workflow defaults to the former structure.

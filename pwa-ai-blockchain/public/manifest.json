@@ -1,0 +1,28 @@
+{
+    "name": "PWA AI Blockchain App",
+    "short_name": "PWA-AI-BC",
+    "description": "A Progressive Web App demonstrating AI and Blockchain integration concepts.",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#007bff",
+    "icons": [
+        {
+            "src": "images/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "orientation": "portrait-primary",
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
+    "prefer_related_applications": false
+}
