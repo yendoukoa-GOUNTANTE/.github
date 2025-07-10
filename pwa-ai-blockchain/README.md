@@ -19,6 +19,10 @@ This project is a Progressive Web App (PWA) designed to demonstrate a conceptual
 
 ```
 pwa-ai-blockchain/
+├── android_twa_guide/        # Guide for Android TWA deployment
+│   ├── README.md
+│   ├── conceptual_assetlinks.json
+│   └── conceptual_build.gradle_snippet.txt
 ├── backend/                  # Conceptual Node.js backend proxy
 │   ├── Dockerfile
 │   ├── package.json
@@ -33,6 +37,12 @@ pwa-ai-blockchain/
 │   ├── manifest.json
 │   ├── popup.html
 │   └── popup.js
+├── docs/                     # Additional documentation
+│   ├── alternative_hybrid_frameworks.md
+│   └── pwa_mobile_enhancements.md
+├── ios_webview_guide/        # Guide for iOS WKWebView deployment
+│   ├── README.md
+│   └── ConceptualViewController.swift
 ├── public/                   # PWA static assets
 │   ├── css/
 │   │   └── style.css
@@ -101,6 +111,19 @@ pwa-ai-blockchain/
 
 ### Backend Server
    - See instructions in `pwa-ai-blockchain/backend/README.md`.
+
+### Backend Server
+   - See instructions in `pwa-ai-blockchain/backend/README.md`.
+
+### Mobile App Deployment (Conceptual Guides)
+   - **Android (TWA)**: See `pwa-ai-blockchain/android_twa_guide/README.md` for deploying as a Trusted Web Activity.
+   - **iOS (WKWebView Wrapper)**: See `pwa-ai-blockchain/ios_webview_guide/README.md` for conceptually wrapping the PWA in a native iOS app.
+
+### Mobile App Deployment (Conceptual Guides)
+   - **Android (TWA)**: See `pwa-ai-blockchain/android_twa_guide/README.md` for deploying as a Trusted Web Activity.
+   - **iOS (WKWebView Wrapper)**: See `pwa-ai-blockchain/ios_webview_guide/README.md` for conceptually wrapping the PWA in a native iOS app.
+   - **Alternative Hybrid Frameworks**: For more advanced native integration, see `pwa-ai-blockchain/docs/alternative_hybrid_frameworks.md`.
+   - **PWA Mobile Enhancements**: Key considerations for a good mobile PWA experience are discussed in `pwa-ai-blockchain/docs/pwa_mobile_enhancements.md`.
 
 ### Deploying to Netlify (Static Hosting)
 

@@ -15,7 +15,14 @@
         {
             "src": "images/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "orientation": "portrait-primary",
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
+    "prefer_related_applications": false
 }

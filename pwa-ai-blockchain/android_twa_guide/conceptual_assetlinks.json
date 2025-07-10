@@ -1,0 +1,13 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.example.pwa_ai_blockchain",
+    "sha256_cert_fingerprints": ["00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF"]
+  }
+}]
+// Note: This is a conceptual example.
+// 1. Replace "com.example.pwa_ai_blockchain" with your actual Android app's package name.
+// 2. Replace the "sha256_cert_fingerprints" value with the actual SHA256 fingerprint
+//    of the digital signature of your Android app's signing certificate.
+// This file should be hosted at: https://YOUR_PWA_DOMAIN/.well-known/assetlinks.json
