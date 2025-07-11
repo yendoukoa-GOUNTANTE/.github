@@ -92,29 +92,98 @@ def index():
 @main_bp.route('/affiliate-marketing')
 def affiliate_marketing():
     """Serves the affiliate marketing placeholder page."""
-    return render_template('affiliate_marketing.html')
+    # Pass the stored data to the template
+    return render_template('affiliate_marketing.html', affiliate_data=current_app.affiliate_data_store)
 
 @main_bp.route('/ads-optimization')
 def ads_optimization():
     """Serves the ads optimization placeholder page."""
-    return render_template('ads_optimization.html')
+    return render_template('ads_optimization.html', ad_campaign_data=current_app.ad_campaign_data_store) # Pass data for display
 
-# We will register this blueprint in app/__init__.py
-# No, I need to modify `app/__init__.py` to register this blueprint.
-# The current plan step is "Initialize a simple Flask application."
-# which includes creating a simple home page route in `app/routes.py`.
-# The current content of `app/__init__.py` is:
-# from flask import Flask
-# def create_app():
-#     app = Flask(__name__, instance_relative_config=True)
-#     app.config.from_mapping(SECRET_KEY='dev')
-#     with app.app_context():
-#         from . import routes
-#     return app
+@main_bp.route('/affiliate-marketing/upload-csv', methods=['GET', 'POST'])
+def upload_affiliate_csv_route():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'danger')
+            return redirect(request.url)
+        if file and file.filename.endswith('.csv'):
+            try:
+                # Read file content as string
+                csv_content = file.stream.read().decode('utf-8')
+                file_stream = io.StringIO(csv_content)
 
-# This means `routes.py` is imported. If `routes.py` defines a blueprint,
-# that blueprint needs to be registered with `app`.
+                # For Phase 1, we clear existing data before loading new.
+                # A more advanced version might append, update, or handle duplicates.
+                # current_app.affiliate_data_store.clear() # Optional: clear before new upload
 
-# Let's ensure `app/__init__.py` registers this `main_bp` from `app/routes.py`.
-# I will do that modification to `app/__init__.py` in the next tool call.
-# This file `app/routes.py` is now complete for this step.
+                new_data, errors = parse_affiliate_csv(file_stream)
+
+                if errors:
+                    for error in errors:
+                        flash(f'Error processing CSV: {error}', 'danger')
+
+                if new_data:
+                    current_app.affiliate_data_store.extend(new_data)
+                    flash(f'Successfully uploaded and processed {len(new_data)} affiliate records.', 'success')
+                elif not errors: # No new data and no errors means empty valid CSV or all rows skipped
+                    flash('CSV processed, but no new valid data found or all rows had issues.', 'warning')
+
+                return redirect(url_for('main.affiliate_marketing')) # Redirect to the dashboard
+            except Exception as e:
+                current_app.logger.error(f"Error processing affiliate CSV upload: {e}")
+                flash(f'An unexpected error occurred: {e}', 'danger')
+                return redirect(request.url)
+        else:
+            flash('Invalid file type. Please upload a .csv file.', 'danger')
+            return redirect(request.url)
+
+    return render_template('upload_affiliate_data.html')
+
+
+from .services import parse_affiliate_csv, parse_ad_campaign_csv
+
+# ... (other routes remain the same) ...
+
+@main_bp.route('/ads-optimization/upload-csv', methods=['GET', 'POST'])
+def upload_ad_csv_route():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'danger')
+            return redirect(request.url)
+        if file and file.filename.endswith('.csv'):
+            try:
+                csv_content = file.stream.read().decode('utf-8')
+                file_stream = io.StringIO(csv_content)
+
+                # current_app.ad_campaign_data_store.clear() # Optional: clear before new upload
+
+                new_data, errors = parse_ad_campaign_csv(file_stream)
+
+                if errors:
+                    for error in errors:
+                        flash(f'Error processing CSV: {error}', 'danger')
+
+                if new_data:
+                    current_app.ad_campaign_data_store.extend(new_data)
+                    flash(f'Successfully uploaded and processed {len(new_data)} ad campaign records.', 'success')
+                elif not errors:
+                     flash('CSV processed, but no new valid data found or all rows had issues.', 'warning')
+
+                return redirect(url_for('main.ads_optimization')) # Redirect to the ad dashboard
+            except Exception as e:
+                current_app.logger.error(f"Error processing ad campaign CSV upload: {e}")
+                flash(f'An unexpected error occurred: {e}', 'danger')
+                return redirect(request.url)
+        else:
+            flash('Invalid file type. Please upload a .csv file.', 'danger')
+            return redirect(request.url)
+
+    return render_template('upload_ad_data.html')

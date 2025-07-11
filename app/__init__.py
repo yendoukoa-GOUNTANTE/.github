@@ -29,4 +29,9 @@ def create_app():
     # The `with app.app_context():` block is not strictly necessary for blueprint registration
     # if the import itself doesn't require an active app context (which `routes.main_bp` doesn't).
 
+    # Initialize in-memory data stores for Phase 1
+    # In a real app, this would be handled by a database or a more robust service layer.
+    app.affiliate_data_store = []
+    app.ad_campaign_data_store = []
+
     return app
