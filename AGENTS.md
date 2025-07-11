@@ -42,4 +42,21 @@ The goal is to build a web application using Python (Flask) and HTML5 to provide
 *   Potentially adding a database to store campaign data, user settings, etc.
 *   Developing more sophisticated UI/UX with CSS and JavaScript.
 
+### PWA Development Considerations
+*   **Service Worker (`sw.js`):**
+    *   Located in `app/static/sw.js` but served from the root (`/sw.js`) via a Flask route.
+    *   Responsible for caching strategies (defined in `urlsToCache`) and offline support.
+    *   When updating cached assets (e.g., CSS, JS, HTML structure that are part of `urlsToCache`), or if the caching logic itself changes, remember to update the `CACHE_NAME` string in `sw.js`. This version change is crucial for the new service worker to replace the old one and for the `activate` event to clear out old caches containing outdated files.
+*   **Manifest (`manifest.json`):**
+    *   Located in `app/static/manifest.json`. Defines app metadata for PWA installation (name, icons, start URL, display mode, etc.).
+*   **Offline Fallback Page:**
+    *   `app/templates/offline.html` is the designated fallback page. It's served by a Flask route and must be included in the `urlsToCache` in `sw.js`.
+*   **PWA Registration & HTML:**
+    *   `app/templates/base.html` includes the link to `manifest.json` and the JavaScript to register the service worker. Ensure the service worker path and scope are correct here.
+*   **Testing PWA Features:**
+    *   Use browser developer tools extensively (Application tab -> Manifest, Service Workers, Cache Storage).
+    *   Lighthouse PWA audits are very helpful for checking compliance and identifying issues.
+    *   Thoroughly test offline scenarios: load pages, go offline, try to reload/navigate. Check that the offline page appears for non-cached/unavailable pages.
+    *   Test PWA installation on various devices/platforms if possible.
+
 Remember to refer to the plan and ask for clarification if anything is unclear! Good luck!

@@ -187,3 +187,19 @@ def upload_ad_csv_route():
             return redirect(request.url)
 
     return render_template('upload_ad_data.html')
+
+@main_bp.route('/offline.html')
+def offline_page():
+    """Serves the offline fallback page."""
+    return render_template('offline.html')
+
+@main_bp.route('/sw.js')
+def service_worker():
+    """Serves the service worker file from the static folder but at root."""
+    # Ensure the content type is correct.
+    # send_from_directory handles ETag, caching headers, etc.
+    return current_app.send_static_file('sw.js'), 200, {'Content-Type': 'application/javascript'}
+    # Alternatively, if we want to set Service-Worker-Allowed for /static/sw.js:
+    # response = current_app.send_static_file('sw.js')
+    # response.headers['Service-Worker-Allowed'] = '/'
+    # return response
