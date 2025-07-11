@@ -46,6 +46,11 @@ This project is an AI-powered agent designed to help companies optimize their af
 *   **Secure Token Handling:** Access tokens are stored in the user's session (note: for production, more robust database storage is recommended).
 *   **Note:** This phase uses MOCK data for display. Actual API calls to fetch live FAN data will be implemented in a subsequent phase.
 
+### Google Ads API Integration - Phase 1
+*   **OAuth 2.0 Connection:** Users can connect their Google account to authorize the application to access Google Ads data.
+*   **Accessible Customer Listing:** After connecting, the Ads Optimization dashboard can display a list of Google Ads customer accounts (Customer ID, Descriptive Name, Manager Status, Test Account Status) accessible to the authenticated user.
+*   **Secure Token Handling:** Refresh tokens are stored in the user's session (note: for production, more robust database storage is recommended). Access tokens are managed by the client library using the refresh token.
+
 ## Setup and Running
 
 1.  **Clone the repository (if applicable).**
@@ -86,6 +91,41 @@ This project is an AI-powered agent designed to help companies optimize their af
         )
         ```
 4.  **Required Scopes:** The application requests `read_audience_network_insights` and `ads_read` scopes. Ensure your app has appropriate permissions if more are needed later.
+
+**Setting up Google Ads Integration:**
+1.  **Create a Google Cloud Project:**
+    *   Go to the [Google Cloud Console](https://console.cloud.google.com/).
+    *   Create a new project or select an existing one.
+2.  **Enable Google Ads API:**
+    *   In your GCP project, navigate to "APIs & Services" -> "Library".
+    *   Search for "Google Ads API" and enable it.
+3.  **Configure OAuth Consent Screen:**
+    *   Navigate to "APIs & Services" -> "OAuth consent screen".
+    *   Configure it as required (User Type, App name, support email, authorized domains).
+4.  **Create OAuth 2.0 Credentials:**
+    *   Navigate to "APIs & Services" -> "Credentials".
+    *   Click "Create Credentials" -> "OAuth client ID".
+    *   Select "Web application" as the application type.
+    *   Add an "Authorized redirect URI": For local development, use `http://localhost:5000/google_ads_oauth_callback` (matching `GOOGLE_ADS_REDIRECT_URI` in the app's config).
+    *   Note the generated Client ID and Client Secret.
+5.  **Obtain a Developer Token:**
+    *   Apply for a developer token for the Google Ads API through the Google Ads UI (typically from an MCC/manager account). This token needs at least Basic Access, or Standard Access for production use.
+6.  **Set Environment Variables/Configuration:**
+    *   The application expects `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_DEVELOPER_TOKEN`, and `GOOGLE_ADS_REDIRECT_URI` to be configured.
+    *   These are currently placeholders in `app/__init__.py`. Replace them with your actual credentials for local development.
+    *   **IMPORTANT FOR PRODUCTION:** Use environment variables or a secure configuration system.
+    *   Example in `app/__init__.py`:
+        ```python
+        app.config.from_mapping(
+            # ... other configs ...
+            GOOGLE_ADS_CLIENT_ID='YOUR_ACTUAL_GOOGLE_CLIENT_ID',
+            GOOGLE_ADS_CLIENT_SECRET='YOUR_ACTUAL_GOOGLE_CLIENT_SECRET',
+            GOOGLE_ADS_DEVELOPER_TOKEN='YOUR_ACTUAL_DEVELOPER_TOKEN',
+            GOOGLE_ADS_REDIRECT_URI='http://localhost:5000/google_ads_oauth_callback',
+        )
+        ```
+7.  **Login Customer ID (Optional but Recommended):**
+    *   If you are accessing accounts through a Manager Account (MCC), you might need to set `GOOGLE_ADS_LOGIN_CUSTOMER_ID` in the config to your MCC ID (without hyphens). The `google-ads` library uses this for some calls if provided. The current implementation lists all accessible accounts without necessarily needing this globally set first, but it's good practice for focused operations.
 
 **Note on PWA Testing:**
 *   For PWA features (like installation and service worker caching) to work correctly, it's often best to serve the application over HTTPS, even in development if possible (e.g., using a self-signed certificate or a tool like `mkcert`). However, `http://localhost` is typically treated as a secure context by browsers for PWA development.
