@@ -40,6 +40,12 @@ This project is an AI-powered agent designed to help companies optimize their af
 *   **Web App Manifest:** Includes `manifest.json` for PWA metadata.
 *   **Service Worker:** Uses `sw.js` for caching and offline capabilities.
 
+### Facebook Audience Network (FAN) Integration - Phase 1
+*   **OAuth 2.0 Connection:** Users can connect their Facebook account to authorize the application to access FAN data.
+*   **Mock Data Display:** The Ads Optimization dashboard can display a list of (mock) FAN ad placements and their (mock) performance data (revenue, impressions, eCPM, fill rate) after connecting.
+*   **Secure Token Handling:** Access tokens are stored in the user's session (note: for production, more robust database storage is recommended).
+*   **Note:** This phase uses MOCK data for display. Actual API calls to fetch live FAN data will be implemented in a subsequent phase.
+
 ## Setup and Running
 
 1.  **Clone the repository (if applicable).**
@@ -57,6 +63,29 @@ This project is an AI-powered agent designed to help companies optimize their af
     python run.py
     ```
     The application will be accessible at `http://127.0.0.1:5000/`.
+
+**Setting up Facebook Audience Network Integration:**
+1.  **Create a Facebook Developer App:**
+    *   Go to [https://developers.facebook.com/apps/](https://developers.facebook.com/apps/).
+    *   Create a new app or use an existing one.
+    *   Add the "Audience Network" product to your app.
+2.  **Configure OAuth Redirect URI:**
+    *   In your Facebook App settings, under "Facebook Login" -> "Settings" (or similar section for OAuth client settings), add a "Valid OAuth Redirect URI".
+    *   For local development, this should be `http://localhost:5000/fb_oauth_callback` (matching `FACEBOOK_REDIRECT_URI` in the app's config).
+3.  **Set Environment Variables/Configuration:**
+    *   The application expects `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, and `FACEBOOK_REDIRECT_URI` to be configured.
+    *   Currently, these are placeholders in `app/__init__.py`. For local development, you can replace these placeholders directly.
+    *   **IMPORTANT FOR PRODUCTION:** Use environment variables or a secure configuration management system for these credentials. Do not commit actual secrets to your repository.
+    *   Example for placeholders in `app/__init__.py`:
+        ```python
+        app.config.from_mapping(
+            # ... other configs ...
+            FACEBOOK_APP_ID='YOUR_ACTUAL_FACEBOOK_APP_ID',
+            FACEBOOK_APP_SECRET='YOUR_ACTUAL_FACEBOOK_APP_SECRET',
+            FACEBOOK_REDIRECT_URI='http://localhost:5000/fb_oauth_callback', # Or your deployed URI
+        )
+        ```
+4.  **Required Scopes:** The application requests `read_audience_network_insights` and `ads_read` scopes. Ensure your app has appropriate permissions if more are needed later.
 
 **Note on PWA Testing:**
 *   For PWA features (like installation and service worker caching) to work correctly, it's often best to serve the application over HTTPS, even in development if possible (e.g., using a self-signed certificate or a tool like `mkcert`). However, `http://localhost` is typically treated as a secure context by browsers for PWA development.

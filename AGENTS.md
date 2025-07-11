@@ -59,4 +59,18 @@ The goal is to build a web application using Python (Flask) and HTML5 to provide
     *   Thoroughly test offline scenarios: load pages, go offline, try to reload/navigate. Check that the offline page appears for non-cached/unavailable pages.
     *   Test PWA installation on various devices/platforms if possible.
 
+### Facebook Audience Network (FAN) API Integration Considerations
+*   **Credentials:** `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, and `FACEBOOK_REDIRECT_URI` are configured in `app/__init__.py` (currently as placeholders). For local testing, these must be replaced with actual values from a Facebook Developer App. **Never commit real secrets.**
+*   **OAuth Flow:**
+    *   Initiation: `/connect-facebook-fan` route.
+    *   Callback: `/fb_oauth_callback` route. This URI must be registered in the Facebook App settings.
+    *   Access tokens are stored in the Flask `session`. This is suitable for development but for production, a more persistent and secure server-side storage (e.g., database) should be considered for long-lived tokens.
+*   **Facebook Business SDK:** The `facebook_business` Python SDK is used. Refer to its documentation for API call structures.
+    *   API initialization (`initialize_fb_api` in `app/services.py`) is crucial before making API calls.
+*   **Service Functions (`app/services.py`):**
+    *   `get_fan_ad_placements_mock()` and `get_fan_performance_data_mock()` currently provide MOCK data. These will need to be replaced with actual API calls to Facebook's Graph API endpoints for FAN.
+    *   Consult Facebook's documentation for the correct API endpoints, required parameters (like `app_id` for FAN data), fields, and permissions/scopes (currently requesting `read_audience_network_insights`, `ads_read`).
+*   **Error Handling:** Be mindful of Facebook API errors (`FacebookRequestError`), rate limits, and token expiration.
+*   **Data Display:** FAN data is displayed on the "Ads Optimization" page.
+
 Remember to refer to the plan and ask for clarification if anything is unclear! Good luck!

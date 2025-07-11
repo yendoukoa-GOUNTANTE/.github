@@ -4,15 +4,88 @@
 
 {% block content %}
     <h1>Ads Optimization Dashboard</h1>
-    <p><a href="{{ url_for('main.upload_ad_csv_route') }}">Upload New Ad Campaign Data CSV</a></p>
+
+    <div>
+        <a href="{{ url_for('main.upload_ad_csv_route') }}" class="button">Upload Ad Campaign CSV</a>
+        <a href="{{ url_for('main.connect_facebook_fan') }}" class="button">Connect to Facebook Audience Network</a>
+        {# We can add logic here to show "Disconnect" or status if already connected #}
+    </div>
+    <hr>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }}" style="margin-bottom: 15px;">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
+
+    {# Facebook Audience Network Section #}
+    <div class="data-section">
+        <h2>Facebook Audience Network (FAN)</h2>
+        {% if fb_error %}
+            <p class="alert alert-danger">Facebook API Error: {{ fb_error }}</p>
+        {% endif %}
+
+        {% if fb_connected %}
+            <p style="color: green;">Status: Connected to Facebook.</p>
+            <form method="POST" action="{{ url_for('main.ads_optimization') }}" style="margin-bottom: 15px;">
+                <input type="hidden" name="action" value="fetch_fan_data">
+                <button type="submit" class="button-like">Refresh FAN Data (Mock)</button>
+            </form>
+
+            {% if fan_placements %}
+                <h3>Mock Ad Placements</h3>
+                <ul>
+                {% for placement in fan_placements %}
+                    <li>{{ placement.name }} (ID: {{ placement.id }})</li>
+                {% else %}
+                    <li>No mock ad placements found.</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if fan_performance_data %}
+                <h3>Mock FAN Performance Data</h3>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Placement ID</th>
+                                <th>Placement Name</th>
+                                <th>Revenue ($)</th>
+                                <th>Impressions</th>
+                                <th>Clicks</th>
+                                <th>eCPM ($)</th>
+                                <th>Fill Rate (%)</th>
+                                <th>Date Info</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in fan_performance_data %}
+                            <tr>
+                                <td>{{ item.placement_id }}</td>
+                                <td>{{ item.placement_name }}</td>
+                                <td>{{ "%.2f" | format(item.revenue) }}</td>
+                                <td>{{ "{:,}".format(item.impressions) }}</td>
+                                <td>{{ "{:,}".format(item.clicks) }}</td>
+                                <td>{{ "%.2f" | format(item.ecpm) }}</td>
+                                <td>{{ "%.2f" | format(item.fill_rate * 100) }}%</td>
+                                <td>{{ item.date_preset_info }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% elif request.method == 'POST' and request.form.get('action') == 'fetch_fan_data' and not fb_error %}
+                <p>No performance data returned for mock placements.</p>
+            {% endif %}
+        {% else %}
+            <p>Not connected to Facebook Audience Network. Please connect to fetch data.</p>
+        {% endif %}
+    </div>
+    <hr style="margin-top: 20px; margin-bottom: 20px;">
+
 
     {% if ad_campaign_data %}
         <h2>Summary Statistics</h2>

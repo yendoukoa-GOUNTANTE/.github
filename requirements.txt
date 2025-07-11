@@ -1,1 +1,2 @@
 Flask>=2.0.0
+facebook_business>=18.0.0 # Using a recent version, can be adjusted

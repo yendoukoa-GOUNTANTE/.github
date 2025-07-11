@@ -9,6 +9,9 @@ def create_app():
     # and ideally stored securely, e.g., in environment variables.
     app.config.from_mapping(
         SECRET_KEY='dev', # Replace with a real secret key in production
+        FACEBOOK_APP_ID='YOUR_FACEBOOK_APP_ID', # Replace with your actual App ID
+        FACEBOOK_APP_SECRET='YOUR_FACEBOOK_APP_SECRET', # Replace with your actual App Secret
+        FACEBOOK_REDIRECT_URI='http://localhost:5000/fb_oauth_callback', # Ensure this matches FB App settings
     )
 
     # We can add configurations from a config.py file if needed

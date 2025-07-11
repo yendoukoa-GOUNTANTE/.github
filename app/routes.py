@@ -75,7 +75,9 @@ def register_routes(app):
 # Let's restructure app/routes.py and app/__init__.py for clarity.
 # I will first write the routes.py file, then adjust __init__.py to call it.
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session
+from facebook_business.api import FacebookAdsApi
+from facebook_business.exceptions import FacebookRequestError
 
 # Create a Blueprint
 # Blueprints are a way to organize a group of related routes and other code.
@@ -95,10 +97,54 @@ def affiliate_marketing():
     # Pass the stored data to the template
     return render_template('affiliate_marketing.html', affiliate_data=current_app.affiliate_data_store)
 
-@main_bp.route('/ads-optimization')
+from .services import parse_affiliate_csv, parse_ad_campaign_csv, initialize_fb_api, get_fan_ad_placements_mock, get_fan_performance_data_mock
+
+@main_bp.route('/ads-optimization', methods=['GET', 'POST']) # Added POST for refresh button
 def ads_optimization():
-    """Serves the ads optimization placeholder page."""
-    return render_template('ads_optimization.html', ad_campaign_data=current_app.ad_campaign_data_store) # Pass data for display
+    """Serves the ads optimization page, handles FAN data fetching."""
+    fb_connected = False
+    fan_placements = []
+    fan_performance_data = []
+    fb_error = None
+
+    if 'fb_access_token' in session:
+        fb_connected = True
+        if not initialize_fb_api(session['fb_access_token']):
+            fb_error = "Failed to initialize Facebook API. Token might be invalid or expired."
+            # Potentially clear session token here if init fails consistently
+            # session.pop('fb_access_token', None)
+            # fb_connected = False
+
+    if request.method == 'POST' and request.form.get('action') == 'fetch_fan_data':
+        if fb_connected and not fb_error:
+            try:
+                # For now, using mock functions
+                fan_placements = get_fan_ad_placements_mock()
+                if fan_placements:
+                    # Get performance for the IDs of the fetched mock placements
+                    mock_placement_ids = [p['id'] for p in fan_placements]
+                    fan_performance_data = get_fan_performance_data_mock(placement_ids=mock_placement_ids)
+                flash('Mock FAN data refreshed!', 'info')
+            except Exception as e:
+                current_app.logger.error(f"Error fetching FAN data: {e}")
+                flash(f"Error fetching FAN data: {str(e)}", 'danger')
+                fb_error = str(e)
+        elif fb_error:
+             flash(f"Cannot fetch FAN data: {fb_error}", 'warning')
+        else:
+            flash('Please connect to Facebook Audience Network first.', 'warning')
+        # Return to the same page, GET request will render the template with new data/errors
+        # Using POST-Redirect-Get is often better but for a simple refresh, this can work.
+        # Or, just let the GET part of the route handle rendering after POST.
+
+    return render_template(
+        'ads_optimization.html',
+        ad_campaign_data=current_app.ad_campaign_data_store,
+        fb_connected=fb_connected,
+        fan_placements=fan_placements, # Will be empty on initial GET unless fetched by default
+        fan_performance_data=fan_performance_data, # Same as above
+        fb_error=fb_error
+    )
 
 @main_bp.route('/affiliate-marketing/upload-csv', methods=['GET', 'POST'])
 def upload_affiliate_csv_route():
@@ -145,8 +191,51 @@ def upload_affiliate_csv_route():
 
 
 from .services import parse_affiliate_csv, parse_ad_campaign_csv
+from facebook_business.api import FacebookAdsApi
+from facebook_business.exceptions import FacebookRequestError
 
 # ... (other routes remain the same) ...
+
+@main_bp.route('/connect-facebook-fan')
+def connect_facebook_fan():
+    """
+    Initiates the OAuth 2.0 flow to connect with Facebook Audience Network.
+    Redirects the user to Facebook's authorization page.
+    """
+    try:
+        # These should be configured in your app settings (e.g., instance config or environment variables)
+        # For now, directly from current_app.config
+        app_id = current_app.config.get('FACEBOOK_APP_ID')
+        app_secret = current_app.config.get('FACEBOOK_APP_SECRET')
+        redirect_uri = current_app.config.get('FACEBOOK_REDIRECT_URI')
+
+        if not app_id or 'YOUR_FACEBOOK_APP_ID' in app_id:
+            flash('Facebook App ID not configured. Please set it up in the application settings.', 'danger')
+            return redirect(url_for('main.ads_optimization'))
+
+        # Scopes needed for Audience Network reporting
+        # 'read_audience_network_insights' is key for FAN performance data.
+        # 'ads_read' might be useful for accessing ad account info if placements are tied to ad accounts.
+        # Check Facebook documentation for the most current and minimal required scopes.
+        scopes = ['read_audience_network_insights', 'ads_read'] # Add other necessary scopes
+
+        # The FacebookAdsApi.init is not strictly needed here for get_oauth_url,
+        # but it's good practice if other API calls might be made before redirection or for consistency.
+        # FacebookAdsApi.init(app_id=app_id, app_secret=app_secret) # Not initializing globally here
+
+        oauth_url = FacebookAdsApi.get_oauth_url(
+            app_id=app_id,
+            redirect_uri=redirect_uri,
+            scope=scopes
+            # state= # Optional: for CSRF protection, generate and store a state value
+        )
+        current_app.logger.info(f"Redirecting to Facebook OAuth URL: {oauth_url}")
+        return redirect(oauth_url)
+
+    except Exception as e:
+        current_app.logger.error(f"Error generating Facebook OAuth URL: {e}")
+        flash(f'Error initiating Facebook connection: {str(e)}', 'danger')
+        return redirect(url_for('main.ads_optimization'))
 
 @main_bp.route('/ads-optimization/upload-csv', methods=['GET', 'POST'])
 def upload_ad_csv_route():
