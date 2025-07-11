@@ -1,0 +1,32 @@
+from flask import Flask
+
+def create_app():
+    """Create and configure an instance of the Flask application."""
+    app = Flask(__name__, instance_relative_config=True)
+
+    # A simple secret key for session management, etc.
+    # In a real application, this should be a complex, random string
+    # and ideally stored securely, e.g., in environment variables.
+    app.config.from_mapping(
+        SECRET_KEY='dev', # Replace with a real secret key in production
+    )
+
+    # We can add configurations from a config.py file if needed
+    # For example: app.config.from_object('config.Config')
+    # Or load instance config, if it exists, when not testing
+    # app.config.from_pyfile('config.py', silent=True)
+
+    # Register Blueprints
+    from . import routes
+    app.register_blueprint(routes.main_bp)
+    # Any other blueprints would be registered here as well.
+    # For example:
+    # from . import auth
+    # app.register_blueprint(auth.bp)
+
+    # It's common to make parts of the app available within the app context,
+    # e.g. for initializing extensions, but routes are typically registered as above.
+    # The `with app.app_context():` block is not strictly necessary for blueprint registration
+    # if the import itself doesn't require an active app context (which `routes.main_bp` doesn't).
+
+    return app

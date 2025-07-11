@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Marketer Agent{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {# In a real app, you might use Bootstrap or another CSS framework #}
+    {# For now, we'll assume a simple style.css (created later or not at all if not styled) #}
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('main.index') }}">Home</a></li>
+            <li><a href="{{ url_for('main.affiliate_marketing') }}">Affiliate Marketing</a></li>
+            <li><a href="{{ url_for('main.ads_optimization') }}">Ads Optimization</a></li>
+        </ul>
+    </nav>
+    <hr>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer>
+        <hr>
+        <p>&copy; 2023 AI Marketer Inc. (Placeholder)</p>
+    </footer>
+</body>
+</html>
