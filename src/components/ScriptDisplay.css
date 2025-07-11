@@ -1,0 +1,28 @@
+.script-display-container {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.script-display-container h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #555;
+}
+
+.script-content-box {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 15px;
+  border-radius: 4px;
+  white-space: pre-wrap; /* Allows text to wrap and preserves line breaks */
+  word-wrap: break-word; /* Ensures long words break to next line */
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+  max-height: 500px; /* Or any height you prefer */
+  overflow-y: auto; /* Add scrollbar if content exceeds max-height */
+}
