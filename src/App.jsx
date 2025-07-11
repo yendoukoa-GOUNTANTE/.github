@@ -6,9 +6,15 @@ import ScriptDisplay from './components/ScriptDisplay'; // Import the ScriptDisp
 
 function App() {
   const [topic, setTopic] = useState('');
-  const [scriptContent, setScriptContent] = useState('');
+  const [scriptContent, setScriptContent] = useState(''); // This will now hold HTML from Quill
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleScriptEditorChange = (content, delta, source, editor) => {
+    // content is the new HTML content of the editor
+    // We can add debouncing here later if performance becomes an issue
+    setScriptContent(content);
+  };
 
   const handleTopicSubmit = async (submittedTopic) => {
     setTopic(submittedTopic);
@@ -45,7 +51,7 @@ function App() {
 
         {/* This is where ScriptDisplay will go. For now, displaying raw script: */}
         {scriptContent && !isLoading && !error && (
-           <ScriptDisplay scriptContent={scriptContent} />
+           <ScriptDisplay scriptContent={scriptContent} onScriptChange={handleScriptEditorChange} />
         )}
       </div>
     </div>
