@@ -7,7 +7,7 @@ Globals:
   Function:
     Timeout: 30 # Increased timeout for potential game logic, default is 3s
     MemorySize: 256 # Increased memory, default is 128MB
-    Runtime: python3.9
+    Runtime: python3.12
     Architectures:
       - x86_64 # or arm64 if preferred and dependencies support it
 
@@ -68,23 +68,3 @@ Outputs:
     Description: "Implicit IAM Role created for AR Boxing Game function"
     Value: !GetAtt ARBoxingGameFunctionRole.Arn
 
-```yaml
-# How to deploy using AWS SAM CLI:
-# 1. Install AWS SAM CLI: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
-# 2. Configure AWS credentials.
-# 3. Build the application:
-#    sam build
-# 4. Deploy the application:
-#    sam deploy --guided
-#    (This will prompt for parameters like Stack Name, AWS Region, DynamoDBTableName (can use default), and confirmation to deploy changesets)
-#    It will also ask if the function needs permissions to be publicly accessible via API Gateway - say yes.
-# 5. After deployment, the API Gateway endpoint URL will be in the Outputs section.
-#
-# To test locally (simulates Lambda and API Gateway):
-# 1. Ensure Docker is running.
-# 2. Start the local API:
-#    sam local start-api --parameter-overrides DynamoDBTableName=YourLocalOrTestTableName
-#    (You might need to set up DynamoDB Local separately for local testing of persistence,
-#     or point to a dev table in AWS, ensuring your local AWS credentials are set up).
-#    The API will be available at http://localhost:3000 by default.
-```
