@@ -43,22 +43,22 @@
             {# "Connected" message is now shown above, next to the connect button #}
             <form method="POST" action="{{ url_for('main.ads_optimization') }}" style="margin-bottom: 15px;">
                 <input type="hidden" name="action" value="fetch_fan_data">
-                <button type="submit" class="button-like">Refresh FAN Data (Mock)</button>
+                <button type="submit" class="button-like">Refresh FAN Data</button>
             </form>
 
             {% if fan_placements %}
-                <h3>Mock Ad Placements</h3>
+                <h3>Ad Placements</h3>
                 <ul>
                 {% for placement in fan_placements %}
                     <li>{{ placement.name }} (ID: {{ placement.id }})</li>
                 {% else %}
-                    <li>No mock ad placements found.</li>
+                    <li>No ad placements found. Data may not be available for the selected period, or there are no active placements.</li>
                 {% endfor %}
                 </ul>
             {% endif %}
 
             {% if fan_performance_data %}
-                <h3>Mock FAN Performance Data</h3>
+                <h3>FAN Performance Data</h3>
                 <div style="overflow-x:auto;">
                     <table>
                         <thead>
@@ -90,7 +90,7 @@
                     </table>
                 </div>
             {% elif request.method == 'POST' and request.form.get('action') == 'fetch_fan_data' and not fb_error %}
-                <p>No performance data returned for mock placements.</p>
+                <p>No performance data returned for the selected period.</p>
             {% endif %}
         {% elif not fb_error %} {# Only show this if not connected AND no overriding fb_error #}
             <p>Not connected to Facebook Audience Network. Please connect to fetch data.</p>
