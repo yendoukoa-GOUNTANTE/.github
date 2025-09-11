@@ -10,8 +10,7 @@ from .models import AffiliatePerformanceData, AdCampaignPerformanceData
 
 # Facebook Business SDK imports
 from facebook_business.api import FacebookAdsApi
-# from facebook_business.adobjects.user import User # Not directly used in current mock
-# from facebook_business.adobjects.adaccount import AdAccount # Not directly used in current mock
+from facebook_business.adobjects.application import Application
 from facebook_business.exceptions import FacebookRequestError
 
 # Google Ads SDK imports
@@ -136,35 +135,118 @@ def initialize_fb_api(access_token: str = None) -> bool:
         _fb_api_initialized_this_request = False
         return False
 
-def get_fan_ad_placements_mock():
+def get_fan_ad_placements():
+    """
+    Fetches real ad placements from the Facebook Audience Network API.
+    NOTE: The Audience Network API does not have a direct endpoint to list all placements
+    by name via the business SDK in a simple "get_placements" call. Performance data is
+    fetched with placements as a breakdown. This function will return a list of
+    placements derived from the performance data.
+    """
     if not _fb_api_initialized_this_request and not initialize_fb_api():
         raise Exception("Facebook API not initialized. Please connect to Facebook first.")
-    current_app.logger.info("Attempting to fetch MOCK FAN ad placements.")
-    return [
-        {"id": "mock_placement_123", "name": "Mock Placement Alpha (Banner)"},
-        {"id": "mock_placement_456", "name": "Mock Placement Beta (Interstitial)"},
-    ]
 
-def get_fan_performance_data_mock(placement_ids: List[str] = None, date_preset: str = 'last_7d'):
+    try:
+        app_id = current_app.config.get('FACEBOOK_APP_ID')
+        current_app.logger.info(f"Fetching FAN performance data to derive placements for app_id: {app_id}")
+
+        app = Application(app_id)
+        # Fetching performance data with 'placement' breakdown is how we get placement info.
+        params = {
+            'metric': 'fb_ad_network_revenue,fb_ad_network_impressions',
+            'breakdowns': ['placement'],
+            'date_preset': 'last_30d', # Use a reasonable default to find active placements
+        }
+        insights = app.get_ad_network_analytics_results(params=params)
+
+        placements = []
+        seen_placement_ids = set()
+        if insights and insights['data']:
+            for result in insights['data']:
+                placement_id = result.get('placement')
+                if placement_id and placement_id not in seen_placement_ids:
+                    # The API doesn't provide placement *names* in this result, only IDs.
+                    # This is a limitation of the Audience Network reporting API.
+                    # We will use the ID as the name for display purposes.
+                    placements.append({"id": placement_id, "name": f"Placement ID: {placement_id}"})
+                    seen_placement_ids.add(placement_id)
+
+        if not placements:
+            current_app.logger.warning(f"No active ad placements found for app {app_id} in the last 30 days.")
+            return []
+
+        return placements
+
+    except FacebookRequestError as e:
+        current_app.logger.error(f"Facebook API Error fetching placements: {e.api_error_message()}")
+        raise Exception(f"Facebook API Error: {e.api_error_message()}") from e
+    except Exception as e:
+        current_app.logger.error(f"An unexpected error occurred fetching FAN placements: {e}")
+        raise Exception("An unexpected error occurred while fetching ad placements.") from e
+
+
+def get_fan_performance_data(placement_ids: List[str] = None, date_preset: str = 'last_7d'):
+    """
+    Fetches real performance data for given placement IDs from Facebook Audience Network API.
+    """
     if not _fb_api_initialized_this_request and not initialize_fb_api():
         raise Exception("Facebook API not initialized. Please connect to Facebook first.")
-    current_app.logger.info(f"Fetching MOCK FAN performance data for placements: {placement_ids or 'all mock'} with date_preset: {date_preset}")
-    data_to_return = []
-    target_placements = get_fan_ad_placements_mock() if not placement_ids else \
-                        [p for p in get_fan_ad_placements_mock() if p["id"] in placement_ids]
-    for placement in target_placements:
-        seed = sum(ord(c) for c in placement["id"])
-        revenue = round(random.uniform(5, 100) + (seed % 10), 2)
-        impressions = random.randint(1000, 20000) + (seed % 100)
-        clicks = int(impressions * random.uniform(0.01, 0.05))
-        fill_rate = round(random.uniform(0.6, 0.95), 2)
-        ecpm = round((revenue / impressions) * 1000, 2) if impressions > 0 else 0
-        data_to_return.append({
-            "placement_id": placement["id"], "placement_name": placement["name"],
-            "date_preset_info": date_preset, "revenue": revenue, "impressions": impressions,
-            "clicks": clicks, "ecpm": ecpm, "fill_rate": fill_rate
-        })
-    return data_to_return
+
+    try:
+        app_id = current_app.config.get('FACEBOOK_APP_ID')
+        current_app.logger.info(f"Fetching real FAN performance data for app_id: {app_id}")
+        app = Application(app_id)
+
+        # Define the metrics you want to fetch
+        metrics = [
+            'fb_ad_network_revenue',
+            'fb_ad_network_impressions',
+            'fb_ad_network_clicks',
+            'fb_ad_network_fill_rate',
+            'fb_ad_network_ecpm',
+        ]
+        params = {
+            'metric': ','.join(metrics),
+            'breakdowns': ['placement'], # We need this to get per-placement data
+            'date_preset': date_preset,
+        }
+
+        # If specific placement_ids are provided, filter by them
+        if placement_ids:
+            params['placement_ids'] = placement_ids
+
+        insights = app.get_ad_network_analytics_results(params=params)
+
+        performance_data = []
+        if insights and insights['data']:
+            for result in insights['data']:
+                # The API returns numeric values as strings, so we need to convert them.
+                revenue = float(result.get('fb_ad_network_revenue', 0))
+                impressions = int(result.get('fb_ad_network_impressions', 0))
+                clicks = int(result.get('fb_ad_network_clicks', 0))
+                fill_rate = float(result.get('fb_ad_network_fill_rate', 0))
+                ecpm = float(result.get('fb_ad_network_ecpm', 0))
+
+                performance_data.append({
+                    "placement_id": result['placement'],
+                    # As noted before, name is not provided, so we construct it.
+                    "placement_name": f"Placement ID: {result['placement']}",
+                    "date_preset_info": date_preset,
+                    "revenue": revenue,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                    "ecpm": ecpm,
+                    "fill_rate": fill_rate
+                })
+
+        return performance_data
+
+    except FacebookRequestError as e:
+        current_app.logger.error(f"Facebook API Error fetching performance data: {e.api_error_message()}")
+        raise Exception(f"Facebook API Error: {e.api_error_message()}") from e
+    except Exception as e:
+        current_app.logger.error(f"An unexpected error occurred fetching FAN performance data: {e}")
+        raise Exception("An unexpected error occurred while fetching performance data.") from e
 
 # --- Google Ads Service Functions ---
 

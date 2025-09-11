@@ -12,7 +12,7 @@ import uuid
 # Local (app-specific) imports
 from .services import (
     parse_affiliate_csv, parse_ad_campaign_csv,
-    initialize_fb_api, get_fan_ad_placements_mock, get_fan_performance_data_mock,
+    initialize_fb_api, get_fan_ad_placements, get_fan_performance_data,
     get_google_ads_client, list_accessible_google_ads_customers # Added Google Ads services
 )
 # Note: GoogleAdsException is handled in services.py, not directly in routes typically
@@ -63,11 +63,25 @@ def ads_optimization():
         if action == 'fetch_fan_data':
             if fb_connected and not fb_error:
                 try:
-                    fan_placements = get_fan_ad_placements_mock()
-                    if fan_placements:
-                        mock_placement_ids = [p['id'] for p in fan_placements]
-                        fan_performance_data = get_fan_performance_data_mock(placement_ids=mock_placement_ids)
-                    flash('Mock FAN data refreshed!', 'info')
+                    # fan_placements = get_fan_ad_placements()
+                    # if fan_placements:
+                    #     placement_ids = [p['id'] for p in fan_placements]
+                    #     fan_performance_data = get_fan_performance_data(placement_ids=placement_ids)
+                    # else:
+                    #     fan_performance_data = [] # Ensure it's an empty list
+                    fan_performance_data = get_fan_performance_data()
+
+                    # Since performance data now contains placement info, we can derive placements from it.
+                    seen_placements = {} # Use dict to avoid duplicate placements
+                    for item in fan_performance_data:
+                        if item['placement_id'] not in seen_placements:
+                            seen_placements[item['placement_id']] = {
+                                "id": item['placement_id'],
+                                "name": item['placement_name']
+                            }
+                    fan_placements = list(seen_placements.values())
+
+                    flash('Facebook Audience Network data refreshed successfully!', 'success')
                 except Exception as e:
                     current_app.logger.error(f"Error fetching FAN data: {e}")
                     flash(f"Error fetching FAN data: {str(e)}", 'danger')
